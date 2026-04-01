@@ -1,0 +1,32 @@
+[package]
+name = "keyboard-usage-tracker"
+version = "1.0.0"
+edition = "2021"
+description = "A zero latency background keyboard and mouse usage tracker for Windows with a realtime web dashboard"
+license = "GPL-3.0"
+repository = "https://github.com/AlpMeteSenel/keyboard-usage-tracker"
+readme = "README.md"
+
+[build-dependencies]
+winresource = "0.1"
+
+[dependencies]
+crossbeam-channel = "0.5"
+rusqlite = { version = "0.35", features = ["bundled"] }
+tiny_http = "0.12"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dependencies.windows]
+version = "0.61"
+features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Shell",
+    "Win32_Graphics_Gdi",
+    "Win32_Security",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Threading",
+    "Win32_Storage_FileSystem",
+]
