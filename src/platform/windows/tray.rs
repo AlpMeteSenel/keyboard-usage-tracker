@@ -1,30 +1,13 @@
-use std::sync::atomic::AtomicBool;
-
-pub static SHOULD_RESTART: AtomicBool = AtomicBool::new(false);
-
-#[cfg(target_os = "linux")]
-pub static SHOULD_STOP: AtomicBool = AtomicBool::new(false);
-
-#[cfg(windows)]
-use std::ffi::c_void;
-#[cfg(windows)]
 use std::mem;
-#[cfg(windows)]
 use std::ptr;
-#[cfg(windows)]
-use std::sync::atomic::{AtomicPtr, Ordering};
+use std::sync::atomic::Ordering;
 
-#[cfg(windows)]
 use windows::core::PCWSTR;
-#[cfg(windows)]
 use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, POINT, WPARAM};
-#[cfg(windows)]
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
-#[cfg(windows)]
 use windows::Win32::UI::Shell::{
     NIF_ICON, NIF_MESSAGE, NIF_TIP, NIM_ADD, NIM_DELETE, NOTIFYICONDATAW, Shell_NotifyIconW,
 };
-#[cfg(windows)]
 use windows::Win32::UI::WindowsAndMessaging::{
     AppendMenuW, CreatePopupMenu, CreateWindowExW, DefWindowProcW, DestroyMenu, DestroyWindow,
     GetCursorPos, IDI_APPLICATION, IMAGE_ICON, LR_DEFAULTSIZE, LoadIconW, LoadImageW, MF_STRING,
@@ -33,28 +16,17 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WNDCLASSW,
 };
 
-#[cfg(windows)]
-pub const WM_TRAYICON: u32 = 0x8000 + 1;
-#[cfg(windows)]
-pub const WM_APP_RESTART: u32 = 0x8000 + 2;
-#[cfg(windows)]
-pub const WM_APP_STOP: u32 = 0x8000 + 3;
-#[cfg(windows)]
+pub(super) const WM_TRAYICON: u32 = 0x8000 + 1;
+pub(super) const WM_APP_RESTART: u32 = 0x8000 + 2;
+pub(super) const WM_APP_STOP: u32 = 0x8000 + 3;
 const IDM_DASHBOARD: usize = 1001;
-#[cfg(windows)]
 const IDM_RESTART: usize = 1002;
-#[cfg(windows)]
 const IDM_EXIT: usize = 1003;
 
-#[cfg(windows)]
-pub static TRAY_HWND_PTR: AtomicPtr<c_void> = AtomicPtr::new(ptr::null_mut());
-
-#[cfg(windows)]
 fn wide_null(s: &str) -> Vec<u16> {
     s.encode_utf16().chain(std::iter::once(0)).collect()
 }
 
-#[cfg(windows)]
 fn wide_tip(s: &str) -> [u16; 128] {
     let mut buf = [0u16; 128];
     for (i, c) in s.encode_utf16().take(127).enumerate() {
@@ -63,7 +35,6 @@ fn wide_tip(s: &str) -> [u16; 128] {
     buf
 }
 
-#[cfg(windows)]
 unsafe extern "system" fn tray_wndproc(
     hwnd: HWND,
     msg: u32,
@@ -82,12 +53,10 @@ unsafe extern "system" fn tray_wndproc(
             let id = (wparam.0 & 0xFFFF) as usize;
             match id {
                 IDM_DASHBOARD => {
-                    let _ = std::process::Command::new("cmd")
-                        .args(["/c", "start", "", "http://127.0.0.1:9898"])
-                        .spawn();
+                    super::open_browser("http://127.0.0.1:9898");
                 }
                 IDM_RESTART => {
-                    SHOULD_RESTART.store(true, Ordering::SeqCst);
+                    super::SHOULD_RESTART.store(true, Ordering::SeqCst);
                     let _ = DestroyWindow(hwnd);
                 }
                 IDM_EXIT => {
@@ -98,7 +67,7 @@ unsafe extern "system" fn tray_wndproc(
             LRESULT(0)
         }
         WM_APP_RESTART => {
-            SHOULD_RESTART.store(true, Ordering::SeqCst);
+            super::SHOULD_RESTART.store(true, Ordering::SeqCst);
             let _ = DestroyWindow(hwnd);
             LRESULT(0)
         }
@@ -115,7 +84,6 @@ unsafe extern "system" fn tray_wndproc(
     }
 }
 
-#[cfg(windows)]
 unsafe fn show_tray_menu(hwnd: HWND) {
     if let Ok(menu) = CreatePopupMenu() {
         let open_label = wide_null("Open Dashboard");
@@ -133,8 +101,7 @@ unsafe fn show_tray_menu(hwnd: HWND) {
     }
 }
 
-#[cfg(windows)]
-pub unsafe fn setup_tray() -> Option<HWND> {
+pub(super) unsafe fn setup_tray() -> Option<HWND> {
     let class_name = wide_null("KBTrackerTray");
     let wc = WNDCLASSW {
         lpfnWndProc: Some(tray_wndproc),
@@ -191,12 +158,11 @@ pub unsafe fn setup_tray() -> Option<HWND> {
 
     let _ = Shell_NotifyIconW(NIM_ADD, &nid);
 
-    TRAY_HWND_PTR.store(hwnd.0, Ordering::SeqCst);
+    super::TRAY_HWND_PTR.store(hwnd.0, Ordering::SeqCst);
 
     Some(hwnd)
 }
 
-#[cfg(windows)]
 unsafe fn remove_tray_icon(hwnd: HWND) {
     let mut nid: NOTIFYICONDATAW = mem::zeroed();
     nid.cbSize = mem::size_of::<NOTIFYICONDATAW>() as u32;

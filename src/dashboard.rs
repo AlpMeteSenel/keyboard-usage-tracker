@@ -1,15 +1,10 @@
 use std::path::PathBuf;
-use std::sync::atomic::Ordering;
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 
 use rusqlite::Connection;
 use serde::Serialize;
-use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
-use windows::Win32::UI::WindowsAndMessaging::PostMessageW;
-
-use crate::tray::{TRAY_HWND_PTR, WM_APP_RESTART, WM_APP_STOP};
 
 // ---------------------------------------------------------------------------
 // Stats data types
@@ -164,7 +159,7 @@ fn query_stats(db_path: &PathBuf) -> DashboardStats {
         .query_row(
             "SELECT COUNT(*) FROM key_events \
              WHERE timestamp >= strftime('%Y-%m-%dT%H:%M:%S','now','localtime','-60 seconds') \
-             AND vk_code NOT IN (16,17,18,20,91,92,160,161,162,163,164,165)",
+             AND key_name NOT IN ('Shift','Ctrl','Alt','CapsLock','Win','LShift','RShift','LCtrl','RCtrl','LAlt','RAlt')",
             [],
             |r| Ok(r.get::<_, u64>(0)? as f64 / 5.0),
         )
@@ -174,7 +169,7 @@ fn query_stats(db_path: &PathBuf) -> DashboardStats {
         .query_row(
             "SELECT COALESCE(AVG(cnt),0) FROM ( \
                SELECT COUNT(*)/5.0 AS cnt FROM key_events \
-               WHERE vk_code NOT IN (16,17,18,20,91,92,160,161,162,163,164,165) \
+               WHERE key_name NOT IN ('Shift','Ctrl','Alt','CapsLock','Win','LShift','RShift','LCtrl','RCtrl','LAlt','RAlt') \
                GROUP BY strftime('%Y-%m-%d %H:%M',timestamp) \
                HAVING COUNT(*)>=5 \
              )",
@@ -187,7 +182,7 @@ fn query_stats(db_path: &PathBuf) -> DashboardStats {
         .query_row(
             "SELECT COALESCE(MAX(cnt),0) FROM ( \
                SELECT COUNT(*)/5.0 AS cnt FROM key_events \
-               WHERE vk_code NOT IN (16,17,18,20,91,92,160,161,162,163,164,165) \
+               WHERE key_name NOT IN ('Shift','Ctrl','Alt','CapsLock','Win','LShift','RShift','LCtrl','RCtrl','LAlt','RAlt') \
                GROUP BY strftime('%Y-%m-%d %H:%M',timestamp) \
                HAVING COUNT(*)>=10 \
              )",
@@ -311,7 +306,7 @@ fn query_stats(db_path: &PathBuf) -> DashboardStats {
             "SELECT strftime('%H:%M',timestamp), COUNT(*)/5.0 \
              FROM key_events \
              WHERE timestamp >= strftime('%Y-%m-%dT%H:%M:%S','now','localtime','-60 minutes') \
-             AND vk_code NOT IN (16,17,18,20,91,92,160,161,162,163,164,165) \
+             AND key_name NOT IN ('Shift','Ctrl','Alt','CapsLock','Win','LShift','RShift','LCtrl','RCtrl','LAlt','RAlt') \
              GROUP BY strftime('%H:%M',timestamp) ORDER BY 1",
         ) {
         stmt.query_map([], |row| {
@@ -345,7 +340,7 @@ fn query_stats(db_path: &PathBuf) -> DashboardStats {
                     "SELECT COALESCE(AVG(cnt),0) FROM ( \
                        SELECT COUNT(*)/5.0 AS cnt FROM key_events \
                        WHERE {time_filter} \
-                       AND vk_code NOT IN (16,17,18,20,91,92,160,161,162,163,164,165) \
+                       AND key_name NOT IN ('Shift','Ctrl','Alt','CapsLock','Win','LShift','RShift','LCtrl','RCtrl','LAlt','RAlt') \
                        GROUP BY strftime('%Y-%m-%d %H:%M',timestamp) \
                        HAVING COUNT(*)>=5 \
                      )"
@@ -445,7 +440,7 @@ fn query_hour_stats(db_path: &PathBuf, offset: u32) -> PeriodStat {
                 "SELECT COALESCE(AVG(cnt),0) FROM ( \
                    SELECT COUNT(*)/5.0 AS cnt FROM key_events \
                    WHERE {time_filter} \
-                   AND vk_code NOT IN (16,17,18,20,91,92,160,161,162,163,164,165) \
+                   AND key_name NOT IN ('Shift','Ctrl','Alt','CapsLock','Win','LShift','RShift','LCtrl','RCtrl','LAlt','RAlt') \
                    GROUP BY strftime('%Y-%m-%d %H:%M',timestamp) \
                    HAVING COUNT(*)>=5 \
                  )"
@@ -474,29 +469,6 @@ fn query_hour_stats(db_path: &PathBuf, offset: u32) -> PeriodStat {
 // ---------------------------------------------------------------------------
 // Hardware bounded rotating token system
 // ---------------------------------------------------------------------------
-
-fn hardware_fingerprint() -> String {
-    let hostname = std::env::var("COMPUTERNAME").unwrap_or_default();
-
-    let vol_serial: u32 = {
-        use windows::Win32::Storage::FileSystem::GetVolumeInformationW;
-        let wide_root: Vec<u16> = "C:\\".encode_utf16().chain(std::iter::once(0)).collect();
-        let mut serial: u32 = 0;
-        unsafe {
-            let _ = GetVolumeInformationW(
-                windows::core::PCWSTR(wide_root.as_ptr()),
-                None,
-                Some(&mut serial),
-                None,
-                None,
-                None,
-            );
-        }
-        serial
-    };
-
-    format!("{hostname}|{vol_serial:08x}")
-}
 
 fn derive_token(fingerprint: &str, purpose: &str, bucket: u64) -> String {
     use std::hash::{Hash, Hasher};
@@ -566,7 +538,7 @@ const DASHBOARD_HTML: &str = include_str!("../dashboard.html");
 const FAVICON_ICO: &[u8] = include_bytes!("../keyboard_logo.ico");
 
 pub fn start_dashboard(db_path: Arc<PathBuf>) {
-    let fingerprint = Arc::new(hardware_fingerprint());
+    let fingerprint = Arc::new(crate::platform::hardware_fingerprint());
 
     // Shared cache for the stats JSON, refreshed by a background thread.
     let stats_cache: Arc<RwLock<String>> = Arc::new(RwLock::new(String::from("{}")));
@@ -689,17 +661,7 @@ pub fn start_dashboard(db_path: Arc<PathBuf>) {
                         continue;
                     }
 
-                    let ptr = TRAY_HWND_PTR.load(Ordering::SeqCst);
-                    if !ptr.is_null() {
-                        unsafe {
-                            let _ = PostMessageW(
-                                Some(HWND(ptr)),
-                                WM_APP_RESTART,
-                                WPARAM(0),
-                                LPARAM(0),
-                            );
-                        }
-                    }
+                    crate::platform::signal_restart();
                     let response = tiny_http::Response::from_string(
                         r#"{"status":"restarting"}"#,
                     )
@@ -726,17 +688,7 @@ pub fn start_dashboard(db_path: Arc<PathBuf>) {
                         continue;
                     }
 
-                    let ptr = TRAY_HWND_PTR.load(Ordering::SeqCst);
-                    if !ptr.is_null() {
-                        unsafe {
-                            let _ = PostMessageW(
-                                Some(HWND(ptr)),
-                                WM_APP_STOP,
-                                WPARAM(0),
-                                LPARAM(0),
-                            );
-                        }
-                    }
+                    crate::platform::signal_stop();
                     let response = tiny_http::Response::from_string(
                         r#"{"status":"stopping"}"#,
                     )

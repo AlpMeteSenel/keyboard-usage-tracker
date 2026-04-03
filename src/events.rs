@@ -1,5 +1,3 @@
-use crossbeam_channel::Sender;
-
 #[derive(Debug, Clone)]
 pub enum MouseButton {
     Left,
@@ -24,21 +22,4 @@ pub enum InputEvent {
         x: i32,
         y: i32,
     },
-}
-
-// ---------------------------------------------------------------------------
-// Thread local event emitter
-// ---------------------------------------------------------------------------
-
-thread_local! {
-    pub static TX: std::cell::RefCell<Option<Sender<InputEvent>>> = const { std::cell::RefCell::new(None) };
-}
-
-#[inline(always)]
-pub fn emit(event: InputEvent) {
-    TX.with(|tx| {
-        if let Some(sender) = tx.borrow().as_ref() {
-            let _ = sender.try_send(event);
-        }
-    });
 }

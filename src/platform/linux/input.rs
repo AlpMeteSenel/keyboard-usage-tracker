@@ -1,117 +1,18 @@
-// ===========================================================================
-// Windows: low-level keyboard & mouse hooks
-// ===========================================================================
-
-#[cfg(windows)]
-use windows::Win32::Foundation::{LPARAM, LRESULT, WPARAM};
-#[cfg(windows)]
-use windows::Win32::UI::Input::KeyboardAndMouse::{
-    GetKeyState, VK_CAPITAL, VK_LSHIFT, VK_RSHIFT, VK_SHIFT,
-};
-#[cfg(windows)]
-use windows::Win32::UI::WindowsAndMessaging::{
-    CallNextHookEx, KBDLLHOOKSTRUCT, MSLLHOOKSTRUCT, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN,
-    WM_MBUTTONDOWN, WM_RBUTTONDOWN, WM_SYSKEYDOWN, WM_SYSKEYUP,
-};
-
-#[cfg(windows)]
-use crate::events::{InputEvent, MouseButton, emit};
-
-// ---------------------------------------------------------------------------
-// Hook callbacks — KEEP THESE AS SIMPLE AS POSSIBLE
-// ---------------------------------------------------------------------------
-
-#[cfg(windows)]
-pub unsafe extern "system" fn keyboard_hook(
-    code: i32,
-    wparam: WPARAM,
-    lparam: LPARAM,
-) -> LRESULT {
-    if code >= 0 {
-        let msg = wparam.0 as u32;
-        if msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN {
-            let info = unsafe { &*(lparam.0 as *const KBDLLHOOKSTRUCT) };
-            let is_extended = (info.flags.0 & 0x01) != 0;
-            let shift_held = unsafe {
-                GetKeyState(VK_SHIFT.0 as i32) < 0
-                    || GetKeyState(VK_LSHIFT.0 as i32) < 0
-                    || GetKeyState(VK_RSHIFT.0 as i32) < 0
-            };
-            let caps_on = unsafe { (GetKeyState(VK_CAPITAL.0 as i32) & 1) != 0 };
-            emit(InputEvent::KeyDown {
-                vk_code: info.vkCode,
-                is_extended,
-                shift_held,
-                caps_on,
-            });
-        } else if msg == WM_KEYUP || msg == WM_SYSKEYUP {
-            let info = unsafe { &*(lparam.0 as *const KBDLLHOOKSTRUCT) };
-            let is_extended = (info.flags.0 & 0x01) != 0;
-            emit(InputEvent::KeyUp {
-                vk_code: info.vkCode,
-                is_extended,
-            });
-        }
-    }
-    unsafe { CallNextHookEx(None, code, wparam, lparam) }
-}
-
-#[cfg(windows)]
-pub unsafe extern "system" fn mouse_hook(
-    code: i32,
-    wparam: WPARAM,
-    lparam: LPARAM,
-) -> LRESULT {
-    if code >= 0 {
-        let info = unsafe { &*(lparam.0 as *const MSLLHOOKSTRUCT) };
-        let msg = wparam.0 as u32;
-        match msg {
-            WM_LBUTTONDOWN => emit(InputEvent::MouseClick {
-                button: MouseButton::Left,
-                x: info.pt.x,
-                y: info.pt.y,
-            }),
-            WM_RBUTTONDOWN => emit(InputEvent::MouseClick {
-                button: MouseButton::Right,
-                x: info.pt.x,
-                y: info.pt.y,
-            }),
-            WM_MBUTTONDOWN => emit(InputEvent::MouseClick {
-                button: MouseButton::Middle,
-                x: info.pt.x,
-                y: info.pt.y,
-            }),
-            _ => {}
-        }
-    }
-    unsafe { CallNextHookEx(None, code, wparam, lparam) }
-}
-
-// ===========================================================================
-// Linux: evdev-based input capture
-// ===========================================================================
-
-#[cfg(target_os = "linux")]
+use std::os::unix::io::AsRawFd;
 use std::sync::atomic::{AtomicBool, Ordering};
-#[cfg(target_os = "linux")]
 use std::sync::Arc;
 
-#[cfg(target_os = "linux")]
 use crossbeam_channel::Sender;
-#[cfg(target_os = "linux")]
 use evdev::{Device, InputEventKind, Key};
 
-#[cfg(target_os = "linux")]
 use crate::events::{InputEvent, MouseButton};
 
-#[cfg(target_os = "linux")]
 fn is_keyboard(device: &Device) -> bool {
     device.supported_keys().map_or(false, |keys| {
         keys.contains(Key::KEY_A) && keys.contains(Key::KEY_Z)
     })
 }
 
-#[cfg(target_os = "linux")]
 fn is_mouse(device: &Device) -> bool {
     let has_buttons = device
         .supported_keys()
@@ -122,7 +23,6 @@ fn is_mouse(device: &Device) -> bool {
     has_buttons && has_rel
 }
 
-#[cfg(target_os = "linux")]
 pub fn start_evdev_capture(tx: Sender<InputEvent>) {
     let shift_held = Arc::new(AtomicBool::new(false));
     let caps_on = Arc::new(AtomicBool::new(false));
@@ -144,7 +44,24 @@ pub fn start_evdev_capture(tx: Sender<InputEvent>) {
 
         std::thread::spawn(move || {
             let mut device = device;
+            let fd = device.as_raw_fd();
             loop {
+                // Check if we should stop before blocking on I/O
+                if super::SHOULD_STOP.load(Ordering::Relaxed) {
+                    break;
+                }
+
+                // Poll the fd with a 200ms timeout so we can check SHOULD_STOP periodically
+                let mut pollfd = libc::pollfd {
+                    fd,
+                    events: libc::POLLIN,
+                    revents: 0,
+                };
+                let ret = unsafe { libc::poll(&mut pollfd, 1, 200) };
+                if ret <= 0 {
+                    continue; // timeout or error — re-check SHOULD_STOP
+                }
+
                 match device.fetch_events() {
                     Ok(events) => {
                         for ev in events {

@@ -2,12 +2,12 @@
 name = "keyboard-usage-tracker"
 version = "1.0.0"
 edition = "2021"
-description = "A zero latency background keyboard and mouse usage tracker for Windows with a realtime web dashboard"
+description = "A zero latency background keyboard and mouse usage tracker with a realtime web dashboard"
 license = "GPL-3.0"
 repository = "https://github.com/AlpMeteSenel/keyboard-usage-tracker"
 readme = "README.md"
 
-[build-dependencies]
+[target.'cfg(windows)'.build-dependencies]
 winresource = "0.1"
 
 [dependencies]
@@ -17,7 +17,7 @@ tiny_http = "0.12"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
-[dependencies.windows]
+[target.'cfg(windows)'.dependencies.windows]
 version = "0.61"
 features = [
     "Win32_Foundation",
@@ -30,3 +30,7 @@ features = [
     "Win32_System_Threading",
     "Win32_Storage_FileSystem",
 ]
+
+[target.'cfg(target_os = "linux")'.dependencies]
+evdev = "0.12"
+libc = "0.2"

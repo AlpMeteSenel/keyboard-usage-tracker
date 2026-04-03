@@ -1,24 +1,8 @@
-use std::path::PathBuf;
-
 use rusqlite::Connection;
 
 // ---------------------------------------------------------------------------
 // SQLite setup
 // ---------------------------------------------------------------------------
-
-pub fn db_path() -> PathBuf {
-    let dir = std::env::var_os("LOCALAPPDATA")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| {
-            let mut p = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("."));
-            p.pop();
-            p
-        });
-    let dir = dir.join("keyboard-usage-tracker");
-    let _ = std::fs::create_dir_all(&dir);
-
-    dir.join("tracker.db")
-}
 
 pub fn init_db(conn: &Connection) {
     conn.execute_batch(
