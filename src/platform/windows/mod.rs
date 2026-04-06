@@ -1,6 +1,6 @@
 mod hooks;
-mod tray;
 mod keymap;
+mod tray;
 
 use std::cell::RefCell;
 use std::ffi::c_void;
@@ -14,8 +14,8 @@ use windows::core::PCWSTR;
 use windows::Win32::Foundation::ERROR_ALREADY_EXISTS;
 use windows::Win32::System::Threading::CreateMutexW;
 use windows::Win32::UI::WindowsAndMessaging::{
-    DispatchMessageW, GetMessageW, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx,
-    MSG, WH_KEYBOARD_LL, WH_MOUSE_LL,
+    DispatchMessageW, GetMessageW, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, MSG,
+    WH_KEYBOARD_LL, WH_MOUSE_LL,
 };
 
 use crate::events::InputEvent;
@@ -36,12 +36,27 @@ fn emit(event: InputEvent) {
     });
 }
 
+use std::sync::{Arc, RwLock};
+
+lazy_static::lazy_static! {
+    pub(crate) static ref TOUCHPAD_CONTACTS: Arc<RwLock<(std::time::Instant, Vec<crate::events::TouchpadContact>)>> = Arc::new(RwLock::new((std::time::Instant::now(), Vec::new())));
+}
+
+pub fn live_touchpad() -> Vec<crate::events::TouchpadContact> {
+    let (last_upd, contacts) = TOUCHPAD_CONTACTS.read().unwrap().clone();
+    if last_upd.elapsed() > std::time::Duration::from_millis(250) {
+        return Vec::new();
+    }
+    contacts
+}
+
 pub fn ensure_single_instance() -> bool {
     let mutex_name: Vec<u16> = "Global\\KeyboardUsageTracker_SingleInstance\0"
         .encode_utf16()
         .collect();
     let _mutex = unsafe { CreateMutexW(None, true, PCWSTR(mutex_name.as_ptr())) };
-    let already_exists = unsafe { windows::Win32::Foundation::GetLastError() } == ERROR_ALREADY_EXISTS;
+    let already_exists =
+        unsafe { windows::Win32::Foundation::GetLastError() } == ERROR_ALREADY_EXISTS;
     !already_exists
 }
 
@@ -98,12 +113,7 @@ pub fn signal_restart() {
     let ptr = TRAY_HWND_PTR.load(Ordering::SeqCst);
     if !ptr.is_null() {
         unsafe {
-            let _ = PostMessageW(
-                Some(HWND(ptr)),
-                tray::WM_APP_RESTART,
-                WPARAM(0),
-                LPARAM(0),
-            );
+            let _ = PostMessageW(Some(HWND(ptr)), tray::WM_APP_RESTART, WPARAM(0), LPARAM(0));
         }
     }
 }
@@ -114,12 +124,7 @@ pub fn signal_stop() {
     let ptr = TRAY_HWND_PTR.load(Ordering::SeqCst);
     if !ptr.is_null() {
         unsafe {
-            let _ = PostMessageW(
-                Some(HWND(ptr)),
-                tray::WM_APP_STOP,
-                WPARAM(0),
-                LPARAM(0),
-            );
+            let _ = PostMessageW(Some(HWND(ptr)), tray::WM_APP_STOP, WPARAM(0), LPARAM(0));
         }
     }
 }

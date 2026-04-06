@@ -3,6 +3,7 @@ mod keymap;
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, RwLock};
 
 use crossbeam_channel::Sender;
 
@@ -11,8 +12,24 @@ use crate::events::InputEvent;
 static SHOULD_RESTART: AtomicBool = AtomicBool::new(false);
 static SHOULD_STOP: AtomicBool = AtomicBool::new(false);
 
+lazy_static::lazy_static! {
+    pub(crate) static ref TOUCHPAD_CONTACTS: Arc<RwLock<(std::time::Instant, Vec<crate::events::TouchpadContact>)>> =
+        Arc::new(RwLock::new((std::time::Instant::now(), Vec::new())));
+}
+
 extern "C" fn handle_signal(_sig: libc::c_int) {
     SHOULD_STOP.store(true, Ordering::SeqCst);
+}
+
+pub fn live_touchpad() -> Vec<crate::events::TouchpadContact> {
+    let (last_upd, contacts) = TOUCHPAD_CONTACTS
+        .read()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone();
+    if last_upd.elapsed() > std::time::Duration::from_millis(250) {
+        return Vec::new();
+    }
+    contacts
 }
 
 pub fn ensure_single_instance() -> bool {
@@ -105,8 +122,14 @@ pub fn should_restart() -> bool {
 pub fn run_capture(tx: Sender<InputEvent>) {
     // Install signal handlers for graceful shutdown
     unsafe {
-        libc::signal(libc::SIGTERM, handle_signal as *const () as libc::sighandler_t);
-        libc::signal(libc::SIGINT, handle_signal as *const () as libc::sighandler_t);
+        libc::signal(
+            libc::SIGTERM,
+            handle_signal as *const () as libc::sighandler_t,
+        );
+        libc::signal(
+            libc::SIGINT,
+            handle_signal as *const () as libc::sighandler_t,
+        );
     }
 
     input::start_evdev_capture(tx);

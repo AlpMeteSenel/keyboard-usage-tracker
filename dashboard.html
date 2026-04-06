@@ -53,12 +53,22 @@
   /* ── Layout ── */
   .container { max-width: 1440px; margin: 0 auto; padding: 1.5rem 2rem 3rem; }
 
+  /* ── Plugin grid ── */
+  .plugin-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+  }
+  .plugin-slot { min-width: 0; }
+  .plugin-slot[data-width="full"] { grid-column: 1 / -1; }
+  .plugin-slot[data-width="half"] { grid-column: span 1; }
+  @media (max-width: 900px) { .plugin-grid { grid-template-columns: 1fr; } .plugin-slot[data-width="half"] { grid-column: 1 / -1; } }
+
   /* ── Stats grid ── */
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: .8rem;
-    margin-bottom: 1.5rem;
   }
   .stat-card {
     background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
@@ -82,10 +92,8 @@
   /* ── Chart container ── */
   .chart-card {
     background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 1.2rem; margin-bottom: 1.2rem;
+    padding: 1.2rem;
   }
-  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1.2rem; }
-  @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
 
   /* ── Bar chart (horizontal) ── */
   .bar-row { display: flex; align-items: center; margin-bottom: .35rem; }
@@ -162,7 +170,6 @@
     content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
     border: 5px solid transparent; border-top-color: #1a1d2e;
   }
-  /* Flip tooltip below for top row */
   .kb-key.tt-below .kb-tooltip {
     bottom: auto; top: calc(100% + 8px);
   }
@@ -192,12 +199,11 @@
   .recent-key:hover { border-color: var(--accent); }
   .recent-key .ts { color: var(--muted); font-size: .58rem; margin-left: .25rem; }
 
-  /* ── Period breakdown table ── */
+  /* ── Period breakdown ── */
   .period-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: .6rem;
-    margin-bottom: 1.5rem;
   }
   @media (max-width: 900px) { .period-grid { grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 600px) { .period-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -262,6 +268,83 @@
   .hold-legend-swatch { width: 14px; height: 10px; border-radius: 2px; display: inline-block; margin-right: .3rem; }
 
   .refresh-note { text-align: center; color: var(--muted); font-size: .68rem; margin-top: 1rem; opacity: .6; }
+
+  /* ── Settings drawer ── */
+  .settings-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 900;
+    backdrop-filter: blur(2px);
+  }
+  .settings-overlay.open { display: block; }
+  .settings-drawer {
+    position: fixed; top: 0; right: -420px; width: 400px; max-width: 90vw; height: 100vh;
+    background: var(--bg2); border-left: 1px solid var(--border);
+    z-index: 901; transition: right .3s ease; overflow-y: auto;
+    padding: 1.5rem;
+  }
+  .settings-drawer.open { right: 0; }
+  .settings-drawer h2 { font-size: 1.1rem; margin-bottom: .3rem; }
+  .settings-drawer .settings-sub { font-size: .72rem; color: var(--muted); margin-bottom: 1.2rem; }
+  .settings-drawer .settings-section { margin-bottom: 1.2rem; }
+  .settings-drawer .settings-section-title { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .5rem; }
+  .settings-close {
+    position: absolute; top: 1rem; right: 1rem; background: none; border: none;
+    color: var(--muted); font-size: 1.2rem; cursor: pointer; padding: .3rem;
+    transition: color .2s;
+  }
+  .settings-close:hover { color: var(--text); }
+
+  /* ── Plugin list in settings ── */
+  .plugin-item {
+    display: flex; align-items: center; gap: .6rem; padding: .55rem .7rem;
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: .4rem; transition: border-color .2s;
+  }
+  .plugin-item:hover { border-color: var(--accent); }
+  .plugin-item.dragging { opacity: .5; border-color: var(--accent); }
+  .plugin-item .drag-handle {
+    cursor: grab; color: var(--muted); font-size: .9rem; user-select: none;
+    display: flex; align-items: center;
+  }
+  .plugin-item .drag-handle:active { cursor: grabbing; }
+  .plugin-item .pi-name { flex: 1; font-size: .82rem; font-weight: 500; }
+  .plugin-item .pi-controls { display: flex; align-items: center; gap: .4rem; }
+  .pi-width-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 4px;
+    padding: .15rem .4rem; font-size: .65rem; cursor: pointer; transition: all .2s;
+    font-family: var(--font);
+  }
+  .pi-width-btn:hover { border-color: var(--accent); color: var(--text); }
+  .pi-width-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(124,106,255,.1); }
+
+  /* ── Toggle switch ── */
+  .toggle-switch {
+    position: relative; width: 36px; height: 20px; flex-shrink: 0;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-switch .slider {
+    position: absolute; inset: 0; background: var(--border); border-radius: 20px;
+    cursor: pointer; transition: background .2s;
+  }
+  .toggle-switch .slider::before {
+    content: ''; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px;
+    background: var(--text); border-radius: 50%; transition: transform .2s;
+  }
+  .toggle-switch input:checked + .slider { background: var(--accent); }
+  .toggle-switch input:checked + .slider::before { transform: translateX(16px); }
+
+  /* ── Reset button ── */
+  .btn-reset {
+    padding: .4rem .8rem; border-radius: 6px; border: 1px solid var(--border);
+    background: none; color: var(--muted); font-size: .75rem; cursor: pointer;
+    transition: all .2s; font-family: var(--font); margin-top: .5rem;
+  }
+  .btn-reset:hover { border-color: var(--accent2); color: var(--accent2); background: rgba(255,107,138,.08); }
+
+  .drop-indicator {
+    height: 3px; background: var(--accent); border-radius: 2px; margin: 2px 0;
+    transition: opacity .15s; opacity: 0;
+  }
+  .drop-indicator.visible { opacity: 1; }
 </style>
 </head>
 <body>
@@ -271,712 +354,41 @@
   <div class="live-dot" title="Live — auto-refreshing"></div>
   <div class="header-right">
     <button class="btn" onclick="location.reload()">↻ Refresh</button>
+    <button class="btn" id="settings-btn" onclick="toggleSettings()" title="Customize layout">⚙ Customize</button>
     <button class="btn btn-danger" id="restart-btn" onclick="doRestart()">⟳ Restart Tracker</button>
     <button class="btn btn-danger" id="stop-btn" onclick="doStop()">■ Stop Tracker</button>
   </div>
 </div>
 
+<!-- Settings drawer -->
+<div class="settings-overlay" id="settings-overlay" onclick="toggleSettings()"></div>
+<div class="settings-drawer" id="settings-drawer">
+  <button class="settings-close" onclick="toggleSettings()">✕</button>
+  <h2>Customize Dashboard</h2>
+  <div class="settings-sub">Drag to reorder, toggle to show/hide, and resize plugins.</div>
+  <div class="settings-section">
+    <div class="settings-section-title">Plugins</div>
+    <div id="plugin-list"></div>
+  </div>
+  <button class="btn-reset" onclick="resetPluginConfig()">Reset to defaults</button>
+</div>
+
 <div class="container">
-
-<!-- ── Stats Cards ── -->
-<div class="stats-grid">
-  <div class="stat-card">
-    <div class="label">Total Keystrokes</div>
-    <div class="value v-accent" id="total-keys">—</div>
-    <div class="sub" id="keys-today-sub">Today: —</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Total Clicks</div>
-    <div class="value v-accent2" id="total-clicks">—</div>
-    <div class="sub" id="clicks-today-sub">Today: —</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Current WPM</div>
-    <div class="value v-green" id="current-wpm">—</div>
-    <div class="sub">Last 60 seconds</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Average WPM</div>
-    <div class="value v-cyan" id="avg-wpm">—</div>
-    <div class="sub">Per active minute</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Best WPM</div>
-    <div class="value v-orange" id="best-wpm">—</div>
-    <div class="sub">Peak 1-minute burst</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Active Time Today</div>
-    <div class="value v-accent" id="active-time">—</div>
-    <div class="sub">Minutes of typing</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Unique Keys</div>
-    <div class="value v-green" id="unique-keys">—</div>
-    <div class="sub">Distinct keys used</div>
-  </div>
+  <div class="plugin-grid" id="plugin-grid"></div>
+  <div class="refresh-note">Auto-refreshes every 2 seconds</div>
 </div>
 
-<!-- ── Period Breakdown ── -->
-<div class="section-title" style="margin-bottom:.8rem"><span class="dot" style="background:var(--orange)"></span> Activity Breakdown</div>
-<div class="period-grid" id="period-grid">
-  <div class="period-card" id="period-hour">
-    <div class="period-nav">
-      <button class="period-nav-btn" id="hour-prev" onclick="hourNav(1)" title="Previous hour">&#9664;</button>
-      <div class="period-name" id="hour-label">This Hour</div>
-      <button class="period-nav-btn" id="hour-next" onclick="hourNav(-1)" title="Next hour" disabled>&#9654;</button>
-    </div>
-    <div class="period-row"><span class="period-label">Keys</span><span class="period-value pv-keys" data-p="keys">—</span></div>
-    <div class="period-row"><span class="period-label">Clicks</span><span class="period-value pv-clicks" data-p="clicks">—</span></div>
-    <div class="period-row"><span class="period-label">Avg WPM</span><span class="period-value pv-wpm" data-p="wpm">—</span></div>
-    <div class="period-row"><span class="period-label">Active</span><span class="period-value pv-active" data-p="active">—</span></div>
-  </div>
-  <div class="period-card" id="period-today">
-    <div class="period-name">Today</div>
-    <div class="period-row"><span class="period-label">Keys</span><span class="period-value pv-keys" data-p="keys">—</span></div>
-    <div class="period-row"><span class="period-label">Clicks</span><span class="period-value pv-clicks" data-p="clicks">—</span></div>
-    <div class="period-row"><span class="period-label">Avg WPM</span><span class="period-value pv-wpm" data-p="wpm">—</span></div>
-    <div class="period-row"><span class="period-label">Active</span><span class="period-value pv-active" data-p="active">—</span></div>
-  </div>
-  <div class="period-card" id="period-week">
-    <div class="period-name">This Week</div>
-    <div class="period-row"><span class="period-label">Keys</span><span class="period-value pv-keys" data-p="keys">—</span></div>
-    <div class="period-row"><span class="period-label">Clicks</span><span class="period-value pv-clicks" data-p="clicks">—</span></div>
-    <div class="period-row"><span class="period-label">Avg WPM</span><span class="period-value pv-wpm" data-p="wpm">—</span></div>
-    <div class="period-row"><span class="period-label">Active</span><span class="period-value pv-active" data-p="active">—</span></div>
-  </div>
-  <div class="period-card" id="period-month">
-    <div class="period-name">This Month</div>
-    <div class="period-row"><span class="period-label">Keys</span><span class="period-value pv-keys" data-p="keys">—</span></div>
-    <div class="period-row"><span class="period-label">Clicks</span><span class="period-value pv-clicks" data-p="clicks">—</span></div>
-    <div class="period-row"><span class="period-label">Avg WPM</span><span class="period-value pv-wpm" data-p="wpm">—</span></div>
-    <div class="period-row"><span class="period-label">Active</span><span class="period-value pv-active" data-p="active">—</span></div>
-  </div>
-  <div class="period-card" id="period-alltime">
-    <div class="period-name">All Time</div>
-    <div class="period-row"><span class="period-label">Keys</span><span class="period-value pv-keys" data-p="keys">—</span></div>
-    <div class="period-row"><span class="period-label">Clicks</span><span class="period-value pv-clicks" data-p="clicks">—</span></div>
-    <div class="period-row"><span class="period-label">Avg WPM</span><span class="period-value pv-wpm" data-p="wpm">—</span></div>
-    <div class="period-row"><span class="period-label">Active</span><span class="period-value pv-active" data-p="active">—</span></div>
-  </div>
-</div>
-
-<!-- ── WPM Timeline ── -->
-<div class="chart-card">
-  <div class="section-title"><span class="dot" style="background:var(--green)"></span> WPM Timeline (Last Hour)</div>
-  <div id="wpm-chart"><div class="chart-empty">Collecting WPM data…</div></div>
-</div>
+<!-- Global tooltip for WPM chart -->
 <div id="wpm-tooltip"></div>
 
-<!-- ── Activity Chart (unified) ── -->
-<div class="chart-card">
-  <div class="section-header">
-    <div class="section-title"><span class="dot" id="activity-dot" style="background:var(--accent)"></span> <span id="activity-chart-title">Today's Keystrokes by Hour</span></div>
-    <div class="toggle-group">
-      <button class="view-toggle active" id="chart-hourly-btn" onclick="setChartView('hourly')" title="Today by Hour">&#128339;</button>
-      <button class="view-toggle" id="chart-daily-btn" onclick="setChartView('daily')" title="Last 30 Days">&#128197;</button>
-      <button class="view-toggle" id="chart-weekly-btn" onclick="setChartView('weekly')" title="Last 12 Weeks">&#128200;</button>
-      <button class="view-toggle" id="chart-monthly-btn" onclick="setChartView('monthly')" title="Last 12 Months">&#128198;</button>
-    </div>
-  </div>
-  <div id="hourly-chart"><div class="chart-empty">No activity yet today. Start typing!</div></div>
-  <div id="daily-chart" style="display:none"><div class="chart-empty">No daily data yet.</div></div>
-  <div id="weekly-chart" style="display:none"><div class="chart-empty">No weekly data yet.</div></div>
-  <div id="monthly-chart" style="display:none"><div class="chart-empty">No monthly data yet.</div></div>
-</div>
-
-<!-- ── Keyboard Heatmap ── -->
-<div class="chart-card">
-  <div class="section-header">
-    <div class="section-title"><span class="dot" style="background:var(--accent2)"></span> Keyboard Heatmap</div>
-    <select class="profile-select" id="kb-profile-select" onchange="switchProfile(this.value)"></select>
-  </div>
-  <div class="keyboard-container">
-    <div class="keyboard" id="keyboard-heatmap"></div>
-  </div>
-  <div class="legend"><span>Less</span><div class="legend-bar"></div><span>More</span></div>
-</div>
-
-<!-- ── Top Keys / Hold Duration ── -->
-<div class="charts-row">
-  <div class="chart-card">
-    <div class="section-title"><span class="dot" style="background:var(--accent)"></span> Top Keys</div>
-    <div id="bars"><div class="chart-empty">Waiting for data…</div></div>
-  </div>
-  <div class="chart-card">
-    <div class="section-header">
-      <div class="section-title"><span class="dot" style="background:var(--orange)"></span> Hold Duration Analysis</div>
-      <div class="toggle-group">
-        <button class="view-toggle active" id="hold-tbl-btn" onclick="setHoldView('table')" title="Table view">&#9776;</button>
-        <button class="view-toggle" id="hold-hist-btn" onclick="setHoldView('histogram')" title="Histogram view">&#9635;</button>
-      </div>
-    </div>
-    <div id="hold-table" style="max-height:400px;overflow-y:auto"><div class="chart-empty">No hold data yet.</div></div>
-    <div id="hold-histogram" class="hold-histogram" style="max-height:400px;overflow-y:auto;display:none"><div class="chart-empty">No hold data yet.</div></div>
-  </div>
-</div>
-
-<!-- ── Recent Activity ── -->
-<div class="chart-card">
-  <div class="section-title"><span class="dot" style="background:var(--green)"></span> Recent Activity (Last 50 Keys)</div>
-  <div id="recent"><div class="chart-empty">Waiting for data…</div></div>
-</div>
-
-<div class="refresh-note">Auto-refreshes every 2 seconds</div>
-
-</div><!-- /container -->
-
 <script>
-// ── Keyboard profiles ──
-const TURKISH_Q_ROWS = [
-  // Row 0: Function keys
-  [
-    {k:'Esc',d:'Escape',w:46},
-    {k:'',w:8,gap:true},
-    {k:'F1',w:43},{k:'F2',w:43},{k:'F3',w:43},{k:'F4',w:43},
-    {k:'',w:6,gap:true},
-    {k:'F5',w:43},{k:'F6',w:43},{k:'F7',w:43},{k:'F8',w:43},
-    {k:'',w:6,gap:true},
-    {k:'F9',w:43},{k:'F10',w:43},{k:'F11',w:43},{k:'F12',w:43},
-    {k:'',w:14,gap:true},
-    {k:'Del',d:'Delete',w:43},{k:'Ins',d:'Insert',w:43},{k:'PrtSc',w:43}
-  ],
-  // Row 1: Number row + numpad top
-  [
-    {k:'"',d:'`',w:42},{k:'1',w:42},{k:'2',w:42},{k:'3',w:42},{k:'4',w:42},
-    {k:'5',w:42},{k:'6',w:42},{k:'7',w:42},{k:'8',w:42},{k:'9',w:42},
-    {k:'0',w:42},{k:'*',d:'-',w:42},{k:'-',d:'=',w:42},{k:'⌫',d:'Backspace',w:68},
-    {k:'',w:14,gap:true},
-    {k:'Num',d:'NumLock',sub:'Lock',tooltip:'Num Lock',w:42},{k:'/',d:'Num/',w:42},{k:'*',d:'Num*',w:42},{k:'-',d:'Num-',w:42}
-  ],
-  // Row 2: QWERTY row + numpad
-  [
-    {k:'Tab',w:60},{k:'Q',w:42},{k:'W',w:42},{k:'E',w:42},{k:'R',w:42},
-    {k:'T',w:42},{k:'Y',w:42},{k:'U',w:42},{k:'I',w:42},{k:'O',w:42},
-    {k:'P',w:42},{k:'Ğ',d:'[',w:42},{k:'Ü',d:']',w:42},{k:',',d:'\\',w:50},
-    {k:'',w:14,gap:true},
-    {k:'7',d:'Num7',sub:'Home',tooltip:'Num 7 / Home',w:42},{k:'8',d:'Num8',sub:'↑',tooltip:'Num 8 / Up',w:42},{k:'9',d:'Num9',sub:'PgUp',tooltip:'Num 9 / Page Up',w:42},{k:'+',d:'Num+',w:42,h:2}
-  ],
-  // Row 3: Home row + numpad
-  [
-    {k:'Caps',d:'CapsLock',w:72},{k:'A',w:42},{k:'S',w:42},{k:'D',w:42},{k:'F',w:42},
-    {k:'G',w:42},{k:'H',w:42},{k:'J',w:42},{k:'K',w:42},{k:'L',w:42},
-    {k:'Ş',d:';',w:42},{k:'İ',d:"'",w:42},{k:'↵',d:'Enter',w:85},
-    {k:'',w:14,gap:true},
-    {k:'4',d:'Num4',sub:'←',tooltip:'Num 4 / Left',w:42},{k:'5',d:'Num5',w:42},{k:'6',d:'Num6',sub:'→',tooltip:'Num 6 / Right',w:42},{k:'',w:42,gap:true}
-  ],
-  // Row 4: Shift row + nav
-  [
-    {k:'LShift',w:85},{k:'Z',w:42},{k:'X',w:42},{k:'C',w:42},
-    {k:'V',w:42},{k:'B',w:42},{k:'N',w:42},{k:'M',w:42},
-    {k:'Ö',d:',',w:42},{k:'Ç',d:'.',w:42},{k:'.',d:'/',w:42},{k:'RShift',w:56},
-    {k:'',w:14,gap:true},
-    {k:'↑',d:'Up',w:42},
-    {k:'',w:60,gap:true},{k:'1',d:'Num1',sub:'End',tooltip:'Num 1 / End',w:42},{k:'2',d:'Num2',sub:'↓',tooltip:'Num 2 / Down',w:42},{k:'3',d:'Num3',sub:'PgDn',tooltip:'Num 3 / Page Down',w:42},{k:'↵',d:'NumEnter',tooltip:'Numpad Enter',w:42,h:2}
-  ],
-  // Row 5: Bottom row + arrows + numpad bottom
-  [
-    {k:'Ctrl',d:'LCtrl',w:52},{k:'Fn',w:42},{k:'❖',d:'Win',w:42},{k:'Alt',d:'LAlt',w:42},
-    {k:'Space',w:214},{k:'AltGr',d:'RAlt',w:48},{k:'<',d:'<>',w:42},
-    {k:'',w:14,gap:true},
-    {k:'←',d:'Left',w:42},{k:'↓',d:'Down',w:42},{k:'→',d:'Right',w:42},
-    {k:'',w:14,gap:true},
-    {k:'0',d:'Num0',sub:'Ins',tooltip:'Num 0 / Insert',w:88},{k:'.',d:'Num.',sub:'Del',tooltip:'Num Decimal / Delete',w:42},{k:'',w:42,gap:true}
-  ]
-];
-
-function cloneKeyboardRows(rows) {
-  return rows.map(row => row.map(key => ({...key})));
-}
-
-function buildUsQwertyRows() {
-  const rows = cloneKeyboardRows(TURKISH_Q_ROWS);
-  const overrides = [
-    [1, 0, {k:'`', d:'`'}],
-    [1, 11, {k:'-', d:'-'}],
-    [1, 12, {k:'=', d:'='}],
-    [2, 11, {k:'[', d:'['}],
-    [2, 12, {k:']', d:']'}],
-    [2, 13, {k:'\\', d:'\\'}],
-    [3, 10, {k:';', d:';'}],
-    [3, 11, {k:"'", d:"'"}],
-    [4, 8, {k:',', d:','}],
-    [4, 9, {k:'.', d:'.'}],
-    [4, 10, {k:'/', d:'/'}]
-  ];
-
-  for (const [rowIndex, keyIndex, patch] of overrides) {
-    rows[rowIndex][keyIndex] = {...rows[rowIndex][keyIndex], ...patch};
-  }
-
-  return rows;
-}
-
-const KEYBOARD_PROFILES = {
-  'turkish-q': {
-    name: 'Turkish Q',
-    rows: TURKISH_Q_ROWS
-  },
-  'us-qwerty': {
-    name: 'US QWERTY',
-    rows: buildUsQwertyRows()
-  }
-};
-
-let currentProfile = localStorage.getItem('kb-profile') || 'turkish-q';
-
-function initProfileSelect() {
-  const sel = document.getElementById('kb-profile-select');
-  sel.innerHTML = '';
-  for (const [id, prof] of Object.entries(KEYBOARD_PROFILES)) {
-    const opt = document.createElement('option');
-    opt.value = id;
-    opt.textContent = prof.name;
-    if (id === currentProfile) opt.selected = true;
-    sel.appendChild(opt);
-  }
-}
-
-function switchProfile(id) {
-  currentProfile = id;
-  localStorage.setItem('kb-profile', id);
-  buildKeyboard();
-  // Re-apply heatmap data if we have cached top_keys
-  if (window._lastTopKeys) updateKeyboard(window._lastTopKeys);
-}
-
-function buildKeyboard() {
-  const profile = KEYBOARD_PROFILES[currentProfile] || KEYBOARD_PROFILES['turkish-q'];
-  const el = document.getElementById('keyboard-heatmap');
-  el.innerHTML = '';
-
-  function renderKey(key, parent, isTopRow) {
-    const keyEl = document.createElement('div');
-    keyEl.className = 'kb-key' + (isTopRow ? ' tt-below' : '') + (key.sub ? ' kb-key-sub' : '') + (key.h && key.h > 1 ? ' kb-key-tall' : '');
-    keyEl.style.width = key.w + 'px';
-    if (key.h && key.h > 1) {
-      keyEl.style.height = (44 * key.h + 5 * (key.h - 1)) + 'px';
-    }
-    keyEl.dataset.key = key.id || key.d || key.k;
-    keyEl.dataset.label = key.tooltip || key.k;
-    const labelEl = document.createElement('span');
-    labelEl.className = 'kb-label';
-    labelEl.textContent = key.k;
-    keyEl.appendChild(labelEl);
-    if (key.sub) {
-      const subLabelEl = document.createElement('span');
-      subLabelEl.className = 'kb-sub-label';
-      subLabelEl.textContent = key.sub;
-      keyEl.appendChild(subLabelEl);
-    }
-    const countEl = document.createElement('span');
-    countEl.className = 'kb-count';
-    countEl.textContent = '0';
-    keyEl.appendChild(countEl);
-    const tt = document.createElement('div');
-    tt.className = 'kb-tooltip';
-    tt.innerHTML = '<span class="tt-key">' + esc(keyEl.dataset.label) + '</span> &mdash; <span class="tt-count">0</span> presses';
-    keyEl.appendChild(tt);
-    parent.appendChild(keyEl);
-  }
-
-  for (let rowIdx = 0; rowIdx < profile.rows.length; rowIdx++) {
-    const row = profile.rows[rowIdx];
-    const rowEl = document.createElement('div');
-    rowEl.className = 'kb-row';
-    if (rowIdx > 0 && profile.rows[rowIdx - 1].some(key => !key.gap && key.h && key.h > 1)) {
-      rowEl.classList.add('kb-row-overlap');
-    }
-
-    // Split at the first large gap (>=14px) to separate main keys from nav/numpad
-    const firstBigGap = row.findIndex(k => k.gap && k.w >= 14);
-    const mainKeys = firstBigGap >= 0 ? row.slice(0, firstBigGap) : row;
-    const rightKeys = firstBigGap >= 0 ? row.slice(firstBigGap + 1) : [];
-
-    // Render main section keys (with small gaps kept as fixed spacers)
-    for (const key of mainKeys) {
-      if (key.gap) {
-        const spacer = document.createElement('div');
-        spacer.style.width = key.w + 'px';
-        spacer.style.flexShrink = '0';
-        rowEl.appendChild(spacer);
-        continue;
-      }
-      renderKey(key, rowEl, rowIdx === 0);
-    }
-
-    // Flex spacer pushes right section to align across rows
-    if (rightKeys.length > 0) {
-      const spacer = document.createElement('div');
-      spacer.style.flex = '1';
-      spacer.style.minWidth = '14px';
-      rowEl.appendChild(spacer);
-    }
-
-    // Render right section (nav cluster + numpad)
-    for (const key of rightKeys) {
-      if (key.gap) {
-        const spacer = document.createElement('div');
-        spacer.style.width = key.w + 'px';
-        spacer.style.flexShrink = '0';
-        rowEl.appendChild(spacer);
-        continue;
-      }
-      renderKey(key, rowEl, rowIdx === 0);
-    }
-
-    el.appendChild(rowEl);
-  }
-}
-
-function heatColor(ratio) {
-  if (ratio <= 0) return '#1e2235';
-  // Deep blue → purple → magenta → red
-  const h = 260 - ratio * 260;
-  const s = 55 + ratio * 35;
-  const l = 18 + ratio * 30;
-  return `hsl(${h},${s}%,${l}%)`;
-}
-
-function updateKeyboard(topKeys) {
-  if (!topKeys || topKeys.length === 0) return;
-  window._lastTopKeys = topKeys;
-  const counts = {};
-  for (const k of topKeys) counts[k.key_name] = (counts[k.key_name] || 0) + k.count;
-  // Also sum Shift/LShift/RShift etc. for generic matching
-  if (counts['LShift'] || counts['RShift']) {
-    counts['Shift'] = (counts['Shift'] || 0) + (counts['LShift'] || 0) + (counts['RShift'] || 0);
-  }
-  if (counts['LCtrl'] || counts['RCtrl']) {
-    counts['Ctrl'] = (counts['Ctrl'] || 0) + (counts['LCtrl'] || 0) + (counts['RCtrl'] || 0);
-  }
-  if (counts['LAlt'] || counts['RAlt']) {
-    counts['Alt'] = (counts['Alt'] || 0) + (counts['LAlt'] || 0) + (counts['RAlt'] || 0);
-  }
-  const maxCount = Math.max(...Object.values(counts), 1);
-  document.querySelectorAll('.kb-key').forEach(el => {
-    const name = el.dataset.key;
-    const c = counts[name] || 0;
-    const ratio = maxCount > 0 ? c / maxCount : 0;
-    el.style.background = heatColor(ratio);
-    el.querySelector('.kb-count').textContent = c > 0 ? c.toLocaleString() : '';
-    const tt = el.querySelector('.kb-tooltip');
-    if (tt) {
-      const label = el.dataset.label || el.querySelector('.kb-label').textContent;
-      tt.innerHTML = '<span class="tt-key">' + esc(label) + '</span> &mdash; <span class="tt-count">' + (c > 0 ? c.toLocaleString() : '0') + '</span> presses';
-    }
-  });
-}
-
-// ── Hold duration view toggle ──
-let holdView = 'table';
-function setHoldView(mode) {
-  holdView = mode;
-  document.getElementById('hold-table').style.display = mode === 'table' ? '' : 'none';
-  document.getElementById('hold-histogram').style.display = mode === 'histogram' ? '' : 'none';
-  document.getElementById('hold-tbl-btn').classList.toggle('active', mode === 'table');
-  document.getElementById('hold-hist-btn').classList.toggle('active', mode === 'histogram');
-}
-
-function renderHoldHistogram(data) {
-  const el = document.getElementById('hold-histogram');
-  if (!data || data.length === 0) { el.innerHTML = '<div class="chart-empty">No hold data yet.</div>'; return; }
-  const maxAvg = Math.max(...data.map(d => d.avg_hold_ms));
-  const maxMax = Math.max(...data.map(d => d.max_hold_ms));
-  const absMax = Math.max(maxMax, 1);
-  let html = '';
-  for (const h of data) {
-    const avgPct = Math.max((h.avg_hold_ms / absMax) * 100, 1);
-    const maxPct = Math.max((h.max_hold_ms / absMax) * 100, 1);
-    html += `<div class="hbar-row">
-      <div class="hbar-label">${esc(h.key_name)}</div>
-      <div class="hbar-track">
-        <div class="hbar-fill hbar-fill-max" style="width:${maxPct}%"></div>
-        <div class="hbar-fill hbar-fill-avg" style="width:${avgPct}%"></div>
-      </div>
-      <div class="hbar-value">${Math.round(h.avg_hold_ms)} ms</div>
-    </div>`;
-  }
-  html += `<div class="hold-legend">
-    <span><span class="hold-legend-swatch" style="background:var(--orange)"></span>Avg hold</span>
-    <span><span class="hold-legend-swatch" style="background:var(--accent2);opacity:.45"></span>Max hold</span>
-  </div>`;
-  el.innerHTML = html;
-}
-
-// ── Activity chart view toggle ──
-let currentChartView = 'hourly';
-function setChartView(view) {
-  currentChartView = view;
-  const views = ['hourly','daily','weekly','monthly'];
-  const titles = {
-    hourly: "Today's Keystrokes by Hour",
-    daily: 'Daily Keystrokes — Last 30 Days',
-    weekly: 'Weekly Keystrokes — Last 12 Weeks',
-    monthly: 'Monthly Keystrokes — Last 12 Months'
-  };
-  const colors = {
-    hourly: 'var(--accent)',
-    daily: 'var(--cyan)',
-    weekly: 'var(--orange)',
-    monthly: 'var(--accent2)'
-  };
-  views.forEach(v => {
-    document.getElementById(v + '-chart').style.display = v === view ? '' : 'none';
-    document.getElementById('chart-' + v + '-btn').classList.toggle('active', v === view);
-  });
-  document.getElementById('activity-chart-title').textContent = titles[view];
-  document.getElementById('activity-dot').style.background = colors[view];
-}
-
-initProfileSelect();
-buildKeyboard();
-
-// ── Chart renderers ──
-function renderWpmTimeline(data) {
-  const el = document.getElementById('wpm-chart');
-  if (!data || data.length === 0) { el.innerHTML = '<div class="chart-empty">No WPM data in the last hour. Start typing!</div>'; return; }
-
-  const W = 700, H = 160, pad = {t:20,r:20,b:30,l:45};
-  const cw = W-pad.l-pad.r, ch = H-pad.t-pad.b;
-  const maxWpm = Math.max(...data.map(d=>d.wpm), 10);
-  const xStep = cw / Math.max(data.length - 1, 1);
-
-  let pts = data.map((d,i) => [pad.l + i*xStep, pad.t + ch - (d.wpm/maxWpm)*ch]);
-  let pathD = pts.map((p,i) => (i===0?'M':'L')+p[0]+','+p[1]).join(' ');
-  let areaD = pathD + ` L${pts[pts.length-1][0]},${pad.t+ch} L${pts[0][0]},${pad.t+ch} Z`;
-
-  // Grid lines
-  let grid = '';
-  for (let i=0;i<=4;i++) {
-    const y = pad.t + (ch/4)*i;
-    const v = Math.round(maxWpm - (maxWpm/4)*i);
-    grid += `<line x1="${pad.l}" y1="${y}" x2="${W-pad.r}" y2="${y}" class="grid-line"/>`;
-    grid += `<text x="${pad.l-8}" y="${y+4}" text-anchor="end" class="axis-label">${v}</text>`;
-  }
-
-  // X axis labels (every ~10th point)
-  let xlabels = '';
-  const step = Math.max(1, Math.floor(data.length / 8));
-  for (let i=0;i<data.length;i+=step) {
-    xlabels += `<text x="${pts[i][0]}" y="${H-4}" text-anchor="middle" class="axis-label">${esc(data[i].minute)}</text>`;
-  }
-
-  let dots = pts.map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="3" class="wpm-dot"/>`).join('');
-
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="svg-chart">
-    <defs><linearGradient id="wpmGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(45,212,168,.3)"/><stop offset="100%" stop-color="rgba(45,212,168,0)"/></linearGradient></defs>
-    ${grid}${xlabels}
-    <path d="${areaD}" class="wpm-area"/>
-    <path d="${pathD}" class="wpm-line"/>
-    ${dots}
-    <line class="wpm-crosshair" x1="0" y1="${pad.t}" x2="0" y2="${pad.t+ch}"/>
-    <circle class="wpm-hover-dot" r="5"/>
-    <rect class="wpm-hover-area" x="${pad.l}" y="${pad.t}" width="${cw}" height="${ch}"/>
-  </svg>`;
-
-  const svg = el.querySelector('svg');
-  const crosshair = svg.querySelector('.wpm-crosshair');
-  const hoverDot = svg.querySelector('.wpm-hover-dot');
-  const tip = document.getElementById('wpm-tooltip');
-  const hoverArea = svg.querySelector('.wpm-hover-area');
-
-  hoverArea.addEventListener('mousemove', e => {
-    const rect = svg.getBoundingClientRect();
-    const scaleX = W / rect.width;
-    const mouseX = (e.clientX - rect.left) * scaleX;
-    // Find nearest point
-    let nearest = 0, minDist = Infinity;
-    for (let i = 0; i < pts.length; i++) {
-      const d = Math.abs(pts[i][0] - mouseX);
-      if (d < minDist) { minDist = d; nearest = i; }
-    }
-    const px = pts[nearest][0], py = pts[nearest][1];
-    crosshair.setAttribute('x1', px);
-    crosshair.setAttribute('x2', px);
-    crosshair.style.opacity = '1';
-    hoverDot.setAttribute('cx', px);
-    hoverDot.setAttribute('cy', py);
-    hoverDot.style.opacity = '1';
-    tip.innerHTML = `<span class="tt-time">${esc(data[nearest].minute)}</span> &mdash; <span class="tt-val">${data[nearest].wpm.toFixed(1)} WPM</span>`;
-    tip.style.display = 'block';
-    tip.style.left = e.clientX + 14 + 'px';
-    tip.style.top = e.clientY - 32 + 'px';
-  });
-
-  hoverArea.addEventListener('mouseleave', () => {
-    crosshair.style.opacity = '0';
-    hoverDot.style.opacity = '0';
-    tip.style.display = 'none';
-  });
-}
-
-function renderHourlyChart(data) {
-  const el = document.getElementById('hourly-chart');
-  if (!data || data.length === 0) { el.innerHTML = '<div class="chart-empty">No activity today yet. Start typing!</div>'; return; }
-  const maxC = Math.max(...data.map(d=>d.count), 1);
-  // Fill all 24 hours
-  const hourMap = {};
-  for (const d of data) hourMap[d.hour] = d.count;
-  let html = '<div class="vbar-container">';
-  for (let h=0; h<24; h++) {
-    const c = hourMap[h] || 0;
-    const pct = (c/maxC)*100;
-    const color = c > 0 ? 'var(--accent)' : 'rgba(124,106,255,.1)';
-    html += `<div class="vbar-wrapper"><div class="vbar" style="height:${Math.max(pct,2)}%;background:${color}"><span class="vbar-tooltip">${h}:00 — ${c.toLocaleString()}</span></div><div class="vbar-label">${h}</div></div>`;
-  }
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-function renderDailyChart(data) {
-  const el = document.getElementById('daily-chart');
-  const dataMap = {};
-  if (data) for (const d of data) dataMap[d.date] = d.count;
-  // Generate all 30 days
-  const days = [];
-  const today = new Date();
-  for (let i = 29; i >= 0; i--) {
-    const dt = new Date(today);
-    dt.setDate(dt.getDate() - i);
-    const key = dt.toISOString().slice(0, 10);
-    days.push({ date: key, count: dataMap[key] || 0 });
-  }
-  const maxC = Math.max(...days.map(d => d.count), 1);
-  let html = '<div class="vbar-container">';
-  for (const d of days) {
-    const pct = (d.count / maxC) * 100;
-    const label = d.date.slice(5);
-    const color = d.count > 0 ? 'var(--cyan)' : 'rgba(34,211,238,.1)';
-    html += `<div class="vbar-wrapper"><div class="vbar" style="height:${Math.max(pct, 2)}%;background:${color}"><span class="vbar-tooltip">${d.date} — ${d.count.toLocaleString()}</span></div><div class="vbar-label">${label}</div></div>`;
-  }
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-function renderWeeklyChart(data) {
-  const el = document.getElementById('weekly-chart');
-  const dataMap = {};
-  if (data) for (const d of data) dataMap[d.week] = d.count;
-  // Generate all 12 weeks using SQLite's %W format (week 00-53 starting Monday)
-  const weeks = [];
-  const today = new Date();
-  for (let i = 11; i >= 0; i--) {
-    const dt = new Date(today);
-    dt.setDate(dt.getDate() - i * 7);
-    const yr = dt.getFullYear();
-    const jan1 = new Date(yr, 0, 1);
-    const dayOfYear = Math.floor((dt - jan1) / 86400000);
-    const wn = Math.floor((dayOfYear + jan1.getDay()) / 7);
-    const key = yr + '-W' + String(wn).padStart(2, '0');
-    if (!weeks.find(w => w.week === key)) {
-      weeks.push({ week: key, count: dataMap[key] || 0 });
-    }
-  }
-  const maxC = Math.max(...weeks.map(d => d.count), 1);
-  let html = '<div class="vbar-container">';
-  for (const d of weeks) {
-    const pct = (d.count / maxC) * 100;
-    const label = d.week.replace(/^\d{4}-/, '');
-    const color = d.count > 0 ? 'var(--orange)' : 'rgba(255,179,71,.1)';
-    html += `<div class="vbar-wrapper"><div class="vbar" style="height:${Math.max(pct, 2)}%;background:${color}"><span class="vbar-tooltip">${d.week} — ${d.count.toLocaleString()}</span></div><div class="vbar-label">${label}</div></div>`;
-  }
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-function renderMonthlyChart(data) {
-  const el = document.getElementById('monthly-chart');
-  const dataMap = {};
-  if (data) for (const d of data) dataMap[d.month] = d.count;
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  // Generate all 12 months
-  const months = [];
-  const today = new Date();
-  for (let i = 11; i >= 0; i--) {
-    const dt = new Date(today.getFullYear(), today.getMonth() - i, 1);
-    const key = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0');
-    months.push({ month: key, count: dataMap[key] || 0 });
-  }
-  const maxC = Math.max(...months.map(d => d.count), 1);
-  let html = '<div class="vbar-container">';
-  for (const d of months) {
-    const pct = (d.count / maxC) * 100;
-    const mIdx = parseInt(d.month.slice(5)) - 1;
-    const label = monthNames[mIdx] || d.month.slice(5);
-    const color = d.count > 0 ? 'var(--accent2)' : 'rgba(255,107,138,.1)';
-    html += `<div class="vbar-wrapper"><div class="vbar" style="height:${Math.max(pct, 2)}%;background:${color}"><span class="vbar-tooltip">${d.month} — ${d.count.toLocaleString()}</span></div><div class="vbar-label">${label}</div></div>`;
-  }
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-// ── Hour navigation state ──
-let hourOffset = 0;
-
-function hourLabel(offset) {
-  if (offset === 0) return 'This Hour';
-  if (offset === 1) return '1 Hour Ago';
-  return offset + ' Hours Ago';
-}
-
-function hourNav(delta) {
-  hourOffset = Math.max(0, hourOffset + delta);
-  document.getElementById('hour-label').textContent = hourLabel(hourOffset);
-  document.getElementById('hour-next').disabled = (hourOffset === 0);
-  fetchHourStats(hourOffset);
-}
-
-function fetchHourStats(offset) {
-  fetch('/api/hour_stats?offset=' + offset + '&token=' + encodeURIComponent(_statsToken))
-    .then(r => r.json())
-    .then(stat => {
-      const card = document.getElementById('period-hour');
-      if (!card) return;
-      card.querySelectorAll('.period-value').forEach(v => {
-        const p = v.dataset.p;
-        if (p === 'keys') v.textContent = fmtNum(stat.keys);
-        else if (p === 'clicks') v.textContent = fmtNum(stat.clicks);
-        else if (p === 'wpm') v.textContent = stat.wpm ? stat.wpm.toFixed(1) : '0';
-        else if (p === 'active') v.textContent = stat.active_minutes + ' min';
-      });
-    })
-    .catch(() => {});
-}
-
-function updatePeriodStats(ps) {
-  if (!ps) return;
-  const map = {
-    'period-today': ps.today,
-    'period-week': ps.this_week,
-    'period-month': ps.this_month,
-    'period-alltime': ps.all_time,
-  };
-  // Only update the hour card from the main stats when offset is 0
-  if (hourOffset === 0) {
-    map['period-hour'] = ps.this_hour;
-  }
-  for (const [id, stat] of Object.entries(map)) {
-    if (!stat) continue;
-    const card = document.getElementById(id);
-    if (!card) continue;
-    const vals = card.querySelectorAll('.period-value');
-    vals.forEach(v => {
-      const p = v.dataset.p;
-      if (p === 'keys') v.textContent = fmtNum(stat.keys);
-      else if (p === 'clicks') v.textContent = fmtNum(stat.clicks);
-      else if (p === 'wpm') v.textContent = stat.wpm ? stat.wpm.toFixed(1) : '0';
-      else if (p === 'active') v.textContent = stat.active_minutes + ' min';
-    });
-  }
-}
-
-// ── Utilities ──
+// ═══════════════════════════════════════════════
+//  Shared utilities
+// ═══════════════════════════════════════════════
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
 function fmtNum(n) { return Number(n).toLocaleString(); }
-
 function animateValue(el, target, duration) {
+  if (!el) return;
   const start = parseInt(el.textContent.replace(/[^0-9.-]/g,'')) || 0;
   if (start === target) return;
   const range = target - start;
@@ -990,7 +402,9 @@ function animateValue(el, target, duration) {
   requestAnimationFrame(step);
 }
 
-// ── Token management ──
+// ═══════════════════════════════════════════════
+//  Token management
+// ═══════════════════════════════════════════════
 let _statsToken = '';
 let _restartToken = '';
 let _stopToken = '';
@@ -1003,23 +417,18 @@ async function refreshTokens() {
     _stopToken = t.stop || '';
   } catch(e) { console.error('Token refresh failed:', e); }
 }
-// Fetch tokens immediately, then cycle every 5 minutes to stay fresh.
 refreshTokens();
 setInterval(refreshTokens, 5 * 60 * 1000);
 
 async function postControlAction(path, token) {
   await refreshTokens();
   const res = await fetch(path + '?token=' + encodeURIComponent(token), { method: 'POST' });
-  if (!res.ok) {
-    throw new Error('Control request failed');
-  }
+  if (!res.ok) throw new Error('Control request failed');
 }
 
-// ── Restart handler ──
 async function doRestart() {
   const btn = document.getElementById('restart-btn');
-  btn.textContent = '⟳ Restarting…';
-  btn.disabled = true;
+  btn.textContent = '⟳ Restarting…'; btn.disabled = true;
   try {
     await postControlAction('/api/restart', _restartToken);
     btn.textContent = '✓ Restarted';
@@ -1032,8 +441,7 @@ async function doRestart() {
 
 async function doStop() {
   const btn = document.getElementById('stop-btn');
-  btn.textContent = '■ Stopping…';
-  btn.disabled = true;
+  btn.textContent = '■ Stopping…'; btn.disabled = true;
   try {
     await postControlAction('/api/stop', _stopToken);
     btn.textContent = '✓ Stopped';
@@ -1043,25 +451,665 @@ async function doStop() {
   }
 }
 
-// ── Main refresh loop ──
-async function refresh() {
-  try {
-    const res = await fetch('/api/stats?token=' + encodeURIComponent(_statsToken));
-    const d = await res.json();
+// ═══════════════════════════════════════════════
+//  Keyboard profiles (shared data)
+// ═══════════════════════════════════════════════
+const TURKISH_Q_ROWS = [
+  [{k:'Esc',d:'Escape',w:46},{k:'',w:8,gap:true},{k:'F1',w:43},{k:'F2',w:43},{k:'F3',w:43},{k:'F4',w:43},{k:'',w:6,gap:true},{k:'F5',w:43},{k:'F6',w:43},{k:'F7',w:43},{k:'F8',w:43},{k:'',w:6,gap:true},{k:'F9',w:43},{k:'F10',w:43},{k:'F11',w:43},{k:'F12',w:43},{k:'',w:14,gap:true},{k:'Del',d:'Delete',w:43},{k:'Ins',d:'Insert',w:43},{k:'PrtSc',w:43}],
+  [{k:'"',d:'`',w:42},{k:'1',w:42},{k:'2',w:42},{k:'3',w:42},{k:'4',w:42},{k:'5',w:42},{k:'6',w:42},{k:'7',w:42},{k:'8',w:42},{k:'9',w:42},{k:'0',w:42},{k:'*',d:'-',w:42},{k:'-',d:'=',w:42},{k:'⌫',d:'Backspace',w:68},{k:'',w:14,gap:true},{k:'Num',d:'NumLock',sub:'Lock',tooltip:'Num Lock',w:42},{k:'/',d:'Num/',w:42},{k:'*',d:'Num*',w:42},{k:'-',d:'Num-',w:42}],
+  [{k:'Tab',w:60},{k:'Q',w:42},{k:'W',w:42},{k:'E',w:42},{k:'R',w:42},{k:'T',w:42},{k:'Y',w:42},{k:'U',w:42},{k:'I',w:42},{k:'O',w:42},{k:'P',w:42},{k:'Ğ',d:'[',w:42},{k:'Ü',d:']',w:42},{k:',',d:'\\',w:50},{k:'',w:14,gap:true},{k:'7',d:'Num7',sub:'Home',tooltip:'Num 7 / Home',w:42},{k:'8',d:'Num8',sub:'↑',tooltip:'Num 8 / Up',w:42},{k:'9',d:'Num9',sub:'PgUp',tooltip:'Num 9 / Page Up',w:42},{k:'+',d:'Num+',w:42,h:2}],
+  [{k:'Caps',d:'CapsLock',w:72},{k:'A',w:42},{k:'S',w:42},{k:'D',w:42},{k:'F',w:42},{k:'G',w:42},{k:'H',w:42},{k:'J',w:42},{k:'K',w:42},{k:'L',w:42},{k:'Ş',d:';',w:42},{k:'İ',d:"'",w:42},{k:'↵',d:'Enter',w:85},{k:'',w:14,gap:true},{k:'4',d:'Num4',sub:'←',tooltip:'Num 4 / Left',w:42},{k:'5',d:'Num5',w:42},{k:'6',d:'Num6',sub:'→',tooltip:'Num 6 / Right',w:42},{k:'',w:42,gap:true}],
+  [{k:'LShift',w:85},{k:'Z',w:42},{k:'X',w:42},{k:'C',w:42},{k:'V',w:42},{k:'B',w:42},{k:'N',w:42},{k:'M',w:42},{k:'Ö',d:',',w:42},{k:'Ç',d:'.',w:42},{k:'.',d:'/',w:42},{k:'RShift',w:56},{k:'',w:14,gap:true},{k:'↑',d:'Up',w:42},{k:'',w:60,gap:true},{k:'1',d:'Num1',sub:'End',tooltip:'Num 1 / End',w:42},{k:'2',d:'Num2',sub:'↓',tooltip:'Num 2 / Down',w:42},{k:'3',d:'Num3',sub:'PgDn',tooltip:'Num 3 / Page Down',w:42},{k:'↵',d:'NumEnter',tooltip:'Numpad Enter',w:42,h:2}],
+  [{k:'Ctrl',d:'LCtrl',w:52},{k:'Fn',w:42},{k:'❖',d:'Win',w:42},{k:'Alt',d:'LAlt',w:42},{k:'Space',w:214},{k:'AltGr',d:'RAlt',w:48},{k:'<',d:'<>',w:42},{k:'',w:14,gap:true},{k:'←',d:'Left',w:42},{k:'↓',d:'Down',w:42},{k:'→',d:'Right',w:42},{k:'',w:14,gap:true},{k:'0',d:'Num0',sub:'Ins',tooltip:'Num 0 / Insert',w:88},{k:'.',d:'Num.',sub:'Del',tooltip:'Num Decimal / Delete',w:42},{k:'',w:42,gap:true}]
+];
 
-    // Stats cards
+function cloneKeyboardRows(rows) { return rows.map(row => row.map(key => ({...key}))); }
+
+function buildUsQwertyRows() {
+  const rows = cloneKeyboardRows(TURKISH_Q_ROWS);
+  const o = [[1,0,{k:'`',d:'`'}],[1,11,{k:'-',d:'-'}],[1,12,{k:'=',d:'='}],[2,11,{k:'[',d:'['}],[2,12,{k:']',d:']'}],[2,13,{k:'\\',d:'\\'}],[3,10,{k:';',d:';'}],[3,11,{k:"'",d:"'"}],[4,8,{k:',',d:','}],[4,9,{k:'.',d:'.'}],[4,10,{k:'/',d:'/'}]];
+  for (const [r,k,p] of o) rows[r][k] = {...rows[r][k], ...p};
+  return rows;
+}
+
+const KEYBOARD_PROFILES = {
+  'turkish-q': { name: 'Turkish Q', rows: TURKISH_Q_ROWS },
+  'us-qwerty': { name: 'US QWERTY', rows: buildUsQwertyRows() }
+};
+
+// ═══════════════════════════════════════════════
+//  Plugin Manager
+// ═══════════════════════════════════════════════
+const STORAGE_KEY = 'dashboard-plugins';
+
+const pluginRegistry = {};
+
+function registerPlugin(plugin) {
+  pluginRegistry[plugin.id] = plugin;
+}
+
+function getDefaultConfig() {
+  return [
+    { id: 'stats-cards',       enabled: true, width: 'full' },
+    { id: 'activity-breakdown', enabled: true, width: 'full' },
+    { id: 'wpm-timeline',      enabled: true, width: 'full' },
+    { id: 'activity-charts',   enabled: true, width: 'full' },
+    { id: 'keyboard-heatmap',  enabled: true, width: 'full' },
+    { id: 'top-keys',          enabled: true, width: 'half' },
+    { id: 'hold-duration',     enabled: true, width: 'half' },
+    { id: 'recent-activity',   enabled: true, width: 'full' },
+  ];
+}
+
+function loadConfig() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return getDefaultConfig();
+    const saved = JSON.parse(raw);
+    // Merge: ensure all registered plugins exist, preserve saved order & settings
+    const defaults = getDefaultConfig();
+    const savedIds = new Set(saved.map(s => s.id));
+    const merged = [];
+    for (const s of saved) {
+      if (pluginRegistry[s.id]) merged.push(s);
+    }
+    // Append any new plugins not in saved config
+    for (const d of defaults) {
+      if (!savedIds.has(d.id)) merged.push(d);
+    }
+    return merged;
+  } catch { return getDefaultConfig(); }
+}
+
+function saveConfig(config) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+}
+
+let currentConfig = [];
+
+function renderPlugins() {
+  const grid = document.getElementById('plugin-grid');
+  grid.innerHTML = '';
+  for (const cfg of currentConfig) {
+    if (!cfg.enabled) continue;
+    const plugin = pluginRegistry[cfg.id];
+    if (!plugin) continue;
+    const slot = document.createElement('div');
+    slot.className = 'plugin-slot';
+    slot.dataset.pluginId = cfg.id;
+    slot.dataset.width = cfg.width;
+    grid.appendChild(slot);
+    plugin.render(slot);
+    if (plugin.init) plugin.init(slot);
+  }
+}
+
+function updateAllPlugins(data) {
+  for (const cfg of currentConfig) {
+    if (!cfg.enabled) continue;
+    const plugin = pluginRegistry[cfg.id];
+    if (plugin && plugin.update) plugin.update(data);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  Settings panel
+// ═══════════════════════════════════════════════
+function toggleSettings() {
+  const overlay = document.getElementById('settings-overlay');
+  const drawer = document.getElementById('settings-drawer');
+  const isOpen = drawer.classList.contains('open');
+  overlay.classList.toggle('open', !isOpen);
+  drawer.classList.toggle('open', !isOpen);
+  if (!isOpen) renderSettingsList();
+}
+
+function renderSettingsList() {
+  const list = document.getElementById('plugin-list');
+  list.innerHTML = '';
+  for (let i = 0; i < currentConfig.length; i++) {
+    const cfg = currentConfig[i];
+    const plugin = pluginRegistry[cfg.id];
+    if (!plugin) continue;
+
+    const item = document.createElement('div');
+    item.className = 'plugin-item';
+    item.draggable = true;
+    item.dataset.idx = i;
+
+    item.innerHTML = `
+      <span class="drag-handle" title="Drag to reorder">⠿</span>
+      <span class="pi-name">${esc(plugin.name)}</span>
+      <div class="pi-controls">
+        <button class="pi-width-btn ${cfg.width === 'half' ? 'active' : ''}" data-w="half" title="Half width">½</button>
+        <button class="pi-width-btn ${cfg.width === 'full' ? 'active' : ''}" data-w="full" title="Full width">1</button>
+        <label class="toggle-switch"><input type="checkbox" ${cfg.enabled ? 'checked' : ''}><span class="slider"></span></label>
+      </div>
+    `;
+
+    // Width buttons
+    item.querySelectorAll('.pi-width-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        cfg.width = btn.dataset.w;
+        saveConfig(currentConfig);
+        renderPlugins();
+        renderSettingsList();
+      });
+    });
+
+    // Toggle
+    item.querySelector('input[type=checkbox]').addEventListener('change', (e) => {
+      cfg.enabled = e.target.checked;
+      saveConfig(currentConfig);
+      renderPlugins();
+      // Force update with last data if enabling
+      if (cfg.enabled && window._lastStatsData) updateAllPlugins(window._lastStatsData);
+    });
+
+    // Drag & drop
+    item.addEventListener('dragstart', (e) => {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(i));
+      item.classList.add('dragging');
+    });
+    item.addEventListener('dragend', () => { item.classList.remove('dragging'); });
+    item.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      item.style.borderColor = 'var(--accent)';
+    });
+    item.addEventListener('dragleave', () => { item.style.borderColor = ''; });
+    item.addEventListener('drop', (e) => {
+      e.preventDefault();
+      item.style.borderColor = '';
+      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+      const toIdx = parseInt(item.dataset.idx);
+      if (fromIdx === toIdx) return;
+      const [moved] = currentConfig.splice(fromIdx, 1);
+      currentConfig.splice(toIdx, 0, moved);
+      saveConfig(currentConfig);
+      renderPlugins();
+      renderSettingsList();
+      if (window._lastStatsData) updateAllPlugins(window._lastStatsData);
+    });
+
+    list.appendChild(item);
+  }
+}
+
+function resetPluginConfig() {
+  localStorage.removeItem(STORAGE_KEY);
+  currentConfig = getDefaultConfig();
+  saveConfig(currentConfig);
+  renderPlugins();
+  renderSettingsList();
+  if (window._lastStatsData) updateAllPlugins(window._lastStatsData);
+}
+
+// ═══════════════════════════════════════════════
+//  PLUGIN: Stats Cards
+// ═══════════════════════════════════════════════
+registerPlugin({
+  id: 'stats-cards',
+  name: 'Stats Cards',
+  render(slot) {
+    slot.innerHTML = `<div class="stats-grid">
+      <div class="stat-card"><div class="label">Total Keystrokes</div><div class="value v-accent" id="total-keys">—</div><div class="sub" id="keys-today-sub">Today: —</div></div>
+      <div class="stat-card"><div class="label">Total Clicks</div><div class="value v-accent2" id="total-clicks">—</div><div class="sub" id="clicks-today-sub">Today: —</div></div>
+      <div class="stat-card"><div class="label">Current WPM</div><div class="value v-green" id="current-wpm">—</div><div class="sub">Last 60 seconds</div></div>
+      <div class="stat-card"><div class="label">Average WPM</div><div class="value v-cyan" id="avg-wpm">—</div><div class="sub">Per active minute</div></div>
+      <div class="stat-card"><div class="label">Best WPM</div><div class="value v-orange" id="best-wpm">—</div><div class="sub">Peak 1-minute burst</div></div>
+      <div class="stat-card"><div class="label">Active Time Today</div><div class="value v-accent" id="active-time">—</div><div class="sub">Minutes of typing</div></div>
+      <div class="stat-card"><div class="label">Unique Keys</div><div class="value v-green" id="unique-keys">—</div><div class="sub">Distinct keys used</div></div>
+    </div>`;
+  },
+  update(d) {
     animateValue(document.getElementById('total-keys'), d.total_keys, 400);
     animateValue(document.getElementById('total-clicks'), d.total_clicks, 400);
-    document.getElementById('keys-today-sub').textContent = 'Today: ' + fmtNum(d.keys_today);
-    document.getElementById('clicks-today-sub').textContent = 'Today: ' + fmtNum(d.clicks_today);
-    document.getElementById('current-wpm').textContent = d.current_wpm ? d.current_wpm.toFixed(1) : '0';
-    document.getElementById('avg-wpm').textContent = d.avg_wpm ? d.avg_wpm.toFixed(1) : '0';
-    document.getElementById('best-wpm').textContent = d.best_wpm ? d.best_wpm.toFixed(1) : '0';
-    document.getElementById('active-time').textContent = d.active_minutes_today || '0';
-    document.getElementById('unique-keys').textContent = d.top_keys ? d.top_keys.length : '0';
+    const ktSub = document.getElementById('keys-today-sub');
+    if (ktSub) ktSub.textContent = 'Today: ' + fmtNum(d.keys_today);
+    const ctSub = document.getElementById('clicks-today-sub');
+    if (ctSub) ctSub.textContent = 'Today: ' + fmtNum(d.clicks_today);
+    const cw = document.getElementById('current-wpm');
+    if (cw) cw.textContent = d.current_wpm ? d.current_wpm.toFixed(1) : '0';
+    const aw = document.getElementById('avg-wpm');
+    if (aw) aw.textContent = d.avg_wpm ? d.avg_wpm.toFixed(1) : '0';
+    const bw = document.getElementById('best-wpm');
+    if (bw) bw.textContent = d.best_wpm ? d.best_wpm.toFixed(1) : '0';
+    const at = document.getElementById('active-time');
+    if (at) at.textContent = d.active_minutes_today || '0';
+    const uk = document.getElementById('unique-keys');
+    if (uk) uk.textContent = d.top_keys ? d.top_keys.length : '0';
+  }
+});
 
-    // Top keys bar chart
+// ═══════════════════════════════════════════════
+//  PLUGIN: Activity Breakdown
+// ═══════════════════════════════════════════════
+registerPlugin({
+  id: 'activity-breakdown',
+  name: 'Activity Breakdown',
+  _hourOffset: 0,
+  render(slot) {
+    const self = pluginRegistry['activity-breakdown'];
+    self._hourOffset = 0;
+    slot.innerHTML = `
+    <div class="section-title" style="margin-bottom:.8rem"><span class="dot" style="background:var(--orange)"></span> Activity Breakdown</div>
+    <div class="period-grid" id="period-grid">
+      <div class="period-card" id="period-hour">
+        <div class="period-nav">
+          <button class="period-nav-btn" id="hour-prev" title="Previous hour">&#9664;</button>
+          <div class="period-name" id="hour-label">This Hour</div>
+          <button class="period-nav-btn" id="hour-next" title="Next hour" disabled>&#9654;</button>
+        </div>
+        <div class="period-row"><span class="period-label">Keys</span><span class="period-value pv-keys" data-p="keys">—</span></div>
+        <div class="period-row"><span class="period-label">Clicks</span><span class="period-value pv-clicks" data-p="clicks">—</span></div>
+        <div class="period-row"><span class="period-label">Avg WPM</span><span class="period-value pv-wpm" data-p="wpm">—</span></div>
+        <div class="period-row"><span class="period-label">Active</span><span class="period-value pv-active" data-p="active">—</span></div>
+      </div>
+      <div class="period-card" id="period-today">
+        <div class="period-name">Today</div>
+        <div class="period-row"><span class="period-label">Keys</span><span class="period-value pv-keys" data-p="keys">—</span></div>
+        <div class="period-row"><span class="period-label">Clicks</span><span class="period-value pv-clicks" data-p="clicks">—</span></div>
+        <div class="period-row"><span class="period-label">Avg WPM</span><span class="period-value pv-wpm" data-p="wpm">—</span></div>
+        <div class="period-row"><span class="period-label">Active</span><span class="period-value pv-active" data-p="active">—</span></div>
+      </div>
+      <div class="period-card" id="period-week">
+        <div class="period-name">This Week</div>
+        <div class="period-row"><span class="period-label">Keys</span><span class="period-value pv-keys" data-p="keys">—</span></div>
+        <div class="period-row"><span class="period-label">Clicks</span><span class="period-value pv-clicks" data-p="clicks">—</span></div>
+        <div class="period-row"><span class="period-label">Avg WPM</span><span class="period-value pv-wpm" data-p="wpm">—</span></div>
+        <div class="period-row"><span class="period-label">Active</span><span class="period-value pv-active" data-p="active">—</span></div>
+      </div>
+      <div class="period-card" id="period-month">
+        <div class="period-name">This Month</div>
+        <div class="period-row"><span class="period-label">Keys</span><span class="period-value pv-keys" data-p="keys">—</span></div>
+        <div class="period-row"><span class="period-label">Clicks</span><span class="period-value pv-clicks" data-p="clicks">—</span></div>
+        <div class="period-row"><span class="period-label">Avg WPM</span><span class="period-value pv-wpm" data-p="wpm">—</span></div>
+        <div class="period-row"><span class="period-label">Active</span><span class="period-value pv-active" data-p="active">—</span></div>
+      </div>
+      <div class="period-card" id="period-alltime">
+        <div class="period-name">All Time</div>
+        <div class="period-row"><span class="period-label">Keys</span><span class="period-value pv-keys" data-p="keys">—</span></div>
+        <div class="period-row"><span class="period-label">Clicks</span><span class="period-value pv-clicks" data-p="clicks">—</span></div>
+        <div class="period-row"><span class="period-label">Avg WPM</span><span class="period-value pv-wpm" data-p="wpm">—</span></div>
+        <div class="period-row"><span class="period-label">Active</span><span class="period-value pv-active" data-p="active">—</span></div>
+      </div>
+    </div>`;
+  },
+  init() {
+    const self = pluginRegistry['activity-breakdown'];
+    function hourLabel(offset) {
+      if (offset === 0) return 'This Hour';
+      if (offset === 1) return '1 Hour Ago';
+      return offset + ' Hours Ago';
+    }
+    function hourNav(delta) {
+      self._hourOffset = Math.max(0, self._hourOffset + delta);
+      const lbl = document.getElementById('hour-label');
+      if (lbl) lbl.textContent = hourLabel(self._hourOffset);
+      const nb = document.getElementById('hour-next');
+      if (nb) nb.disabled = (self._hourOffset === 0);
+      fetch('/api/hour_stats?offset=' + self._hourOffset + '&token=' + encodeURIComponent(_statsToken))
+        .then(r => r.json())
+        .then(stat => {
+          const card = document.getElementById('period-hour');
+          if (!card) return;
+          card.querySelectorAll('.period-value').forEach(v => {
+            const p = v.dataset.p;
+            if (p === 'keys') v.textContent = fmtNum(stat.keys);
+            else if (p === 'clicks') v.textContent = fmtNum(stat.clicks);
+            else if (p === 'wpm') v.textContent = stat.wpm ? stat.wpm.toFixed(1) : '0';
+            else if (p === 'active') v.textContent = stat.active_minutes + ' min';
+          });
+        }).catch(() => {});
+    }
+    const prevBtn = document.getElementById('hour-prev');
+    const nextBtn = document.getElementById('hour-next');
+    if (prevBtn) prevBtn.addEventListener('click', () => hourNav(1));
+    if (nextBtn) nextBtn.addEventListener('click', () => hourNav(-1));
+  },
+  update(d) {
+    const self = pluginRegistry['activity-breakdown'];
+    const ps = d.period_stats;
+    if (!ps) return;
+    const map = {
+      'period-today': ps.today,
+      'period-week': ps.this_week,
+      'period-month': ps.this_month,
+      'period-alltime': ps.all_time,
+    };
+    if (self._hourOffset === 0) map['period-hour'] = ps.this_hour;
+    for (const [id, stat] of Object.entries(map)) {
+      if (!stat) continue;
+      const card = document.getElementById(id);
+      if (!card) continue;
+      card.querySelectorAll('.period-value').forEach(v => {
+        const p = v.dataset.p;
+        if (p === 'keys') v.textContent = fmtNum(stat.keys);
+        else if (p === 'clicks') v.textContent = fmtNum(stat.clicks);
+        else if (p === 'wpm') v.textContent = stat.wpm ? stat.wpm.toFixed(1) : '0';
+        else if (p === 'active') v.textContent = stat.active_minutes + ' min';
+      });
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  PLUGIN: WPM Timeline
+// ═══════════════════════════════════════════════
+registerPlugin({
+  id: 'wpm-timeline',
+  name: 'WPM Timeline',
+  render(slot) {
+    slot.innerHTML = `<div class="chart-card">
+      <div class="section-title"><span class="dot" style="background:var(--green)"></span> WPM Timeline (Last Hour)</div>
+      <div id="wpm-chart"><div class="chart-empty">Collecting WPM data…</div></div>
+    </div>`;
+  },
+  update(d) {
+    const el = document.getElementById('wpm-chart');
+    if (!el) return;
+    const data = d.wpm_timeline;
+    if (!data || data.length === 0) { el.innerHTML = '<div class="chart-empty">No WPM data in the last hour. Start typing!</div>'; return; }
+
+    const W = 700, H = 160, pad = {t:20,r:20,b:30,l:45};
+    const cw = W-pad.l-pad.r, ch = H-pad.t-pad.b;
+    const maxWpm = Math.max(...data.map(d=>d.wpm), 10);
+    const xStep = cw / Math.max(data.length - 1, 1);
+
+    let pts = data.map((d,i) => [pad.l + i*xStep, pad.t + ch - (d.wpm/maxWpm)*ch]);
+    let pathD = pts.map((p,i) => (i===0?'M':'L')+p[0]+','+p[1]).join(' ');
+    let areaD = pathD + ` L${pts[pts.length-1][0]},${pad.t+ch} L${pts[0][0]},${pad.t+ch} Z`;
+
+    let grid = '';
+    for (let i=0;i<=4;i++) {
+      const y = pad.t + (ch/4)*i;
+      const v = Math.round(maxWpm - (maxWpm/4)*i);
+      grid += `<line x1="${pad.l}" y1="${y}" x2="${W-pad.r}" y2="${y}" class="grid-line"/>`;
+      grid += `<text x="${pad.l-8}" y="${y+4}" text-anchor="end" class="axis-label">${v}</text>`;
+    }
+    let xlabels = '';
+    const step = Math.max(1, Math.floor(data.length / 8));
+    for (let i=0;i<data.length;i+=step) {
+      xlabels += `<text x="${pts[i][0]}" y="${H-4}" text-anchor="middle" class="axis-label">${esc(data[i].minute)}</text>`;
+    }
+    let dots = pts.map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="3" class="wpm-dot"/>`).join('');
+
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="svg-chart">
+      <defs><linearGradient id="wpmGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(45,212,168,.3)"/><stop offset="100%" stop-color="rgba(45,212,168,0)"/></linearGradient></defs>
+      ${grid}${xlabels}
+      <path d="${areaD}" class="wpm-area"/>
+      <path d="${pathD}" class="wpm-line"/>
+      ${dots}
+      <line class="wpm-crosshair" x1="0" y1="${pad.t}" x2="0" y2="${pad.t+ch}"/>
+      <circle class="wpm-hover-dot" r="5"/>
+      <rect class="wpm-hover-area" x="${pad.l}" y="${pad.t}" width="${cw}" height="${ch}"/>
+    </svg>`;
+
+    const svg = el.querySelector('svg');
+    const crosshair = svg.querySelector('.wpm-crosshair');
+    const hoverDot = svg.querySelector('.wpm-hover-dot');
+    const tip = document.getElementById('wpm-tooltip');
+    const hoverArea = svg.querySelector('.wpm-hover-area');
+
+    hoverArea.addEventListener('mousemove', e => {
+      const rect = svg.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const mouseX = (e.clientX - rect.left) * scaleX;
+      let nearest = 0, minDist = Infinity;
+      for (let i = 0; i < pts.length; i++) {
+        const dd = Math.abs(pts[i][0] - mouseX);
+        if (dd < minDist) { minDist = dd; nearest = i; }
+      }
+      const px = pts[nearest][0], py = pts[nearest][1];
+      crosshair.setAttribute('x1', px); crosshair.setAttribute('x2', px); crosshair.style.opacity = '1';
+      hoverDot.setAttribute('cx', px); hoverDot.setAttribute('cy', py); hoverDot.style.opacity = '1';
+      tip.innerHTML = `<span class="tt-time">${esc(data[nearest].minute)}</span> &mdash; <span class="tt-val">${data[nearest].wpm.toFixed(1)} WPM</span>`;
+      tip.style.display = 'block'; tip.style.left = e.clientX + 14 + 'px'; tip.style.top = e.clientY - 32 + 'px';
+    });
+    hoverArea.addEventListener('mouseleave', () => {
+      crosshair.style.opacity = '0'; hoverDot.style.opacity = '0'; tip.style.display = 'none';
+    });
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  PLUGIN: Activity Charts
+// ═══════════════════════════════════════════════
+registerPlugin({
+  id: 'activity-charts',
+  name: 'Activity Charts',
+  _view: 'hourly',
+  render(slot) {
+    slot.innerHTML = `<div class="chart-card">
+      <div class="section-header">
+        <div class="section-title"><span class="dot" id="activity-dot" style="background:var(--accent)"></span> <span id="activity-chart-title">Today's Keystrokes by Hour</span></div>
+        <div class="toggle-group">
+          <button class="view-toggle active" id="chart-hourly-btn" title="Today by Hour">&#128339;</button>
+          <button class="view-toggle" id="chart-daily-btn" title="Last 30 Days">&#128197;</button>
+          <button class="view-toggle" id="chart-weekly-btn" title="Last 12 Weeks">&#128200;</button>
+          <button class="view-toggle" id="chart-monthly-btn" title="Last 12 Months">&#128198;</button>
+        </div>
+      </div>
+      <div id="hourly-chart"><div class="chart-empty">No activity yet today. Start typing!</div></div>
+      <div id="daily-chart" style="display:none"><div class="chart-empty">No daily data yet.</div></div>
+      <div id="weekly-chart" style="display:none"><div class="chart-empty">No weekly data yet.</div></div>
+      <div id="monthly-chart" style="display:none"><div class="chart-empty">No monthly data yet.</div></div>
+    </div>`;
+  },
+  init() {
+    const self = pluginRegistry['activity-charts'];
+    const titles = { hourly:"Today's Keystrokes by Hour", daily:'Daily Keystrokes — Last 30 Days', weekly:'Weekly Keystrokes — Last 12 Weeks', monthly:'Monthly Keystrokes — Last 12 Months' };
+    const colors = { hourly:'var(--accent)', daily:'var(--cyan)', weekly:'var(--orange)', monthly:'var(--accent2)' };
+    function setView(view) {
+      self._view = view;
+      ['hourly','daily','weekly','monthly'].forEach(v => {
+        const cel = document.getElementById(v + '-chart');
+        if (cel) cel.style.display = v === view ? '' : 'none';
+        const btn = document.getElementById('chart-' + v + '-btn');
+        if (btn) btn.classList.toggle('active', v === view);
+      });
+      const title = document.getElementById('activity-chart-title');
+      if (title) title.textContent = titles[view];
+      const dot = document.getElementById('activity-dot');
+      if (dot) dot.style.background = colors[view];
+    }
+    ['hourly','daily','weekly','monthly'].forEach(v => {
+      const btn = document.getElementById('chart-' + v + '-btn');
+      if (btn) btn.addEventListener('click', () => setView(v));
+    });
+  },
+  update(d) {
+    // Hourly
+    const hEl = document.getElementById('hourly-chart');
+    if (hEl) {
+      const data = d.hourly_activity;
+      if (!data || data.length === 0) { hEl.innerHTML = '<div class="chart-empty">No activity today yet. Start typing!</div>'; }
+      else {
+        const maxC = Math.max(...data.map(x=>x.count), 1);
+        const hourMap = {}; for (const x of data) hourMap[x.hour] = x.count;
+        let html = '<div class="vbar-container">';
+        for (let h=0;h<24;h++) { const c=hourMap[h]||0; const pct=(c/maxC)*100; const color=c>0?'var(--accent)':'rgba(124,106,255,.1)'; html+=`<div class="vbar-wrapper"><div class="vbar" style="height:${Math.max(pct,2)}%;background:${color}"><span class="vbar-tooltip">${h}:00 — ${c.toLocaleString()}</span></div><div class="vbar-label">${h}</div></div>`; }
+        html += '</div>'; hEl.innerHTML = html;
+      }
+    }
+    // Daily
+    const dEl = document.getElementById('daily-chart');
+    if (dEl) {
+      const dataMap = {}; if (d.daily_activity) for (const x of d.daily_activity) dataMap[x.date] = x.count;
+      const days = []; const today = new Date();
+      for (let i=29;i>=0;i--) { const dt=new Date(today); dt.setDate(dt.getDate()-i); const key=dt.toISOString().slice(0,10); days.push({date:key,count:dataMap[key]||0}); }
+      const maxC=Math.max(...days.map(x=>x.count),1);
+      let html='<div class="vbar-container">';
+      for (const x of days) { const pct=(x.count/maxC)*100; const label=x.date.slice(5); const color=x.count>0?'var(--cyan)':'rgba(34,211,238,.1)'; html+=`<div class="vbar-wrapper"><div class="vbar" style="height:${Math.max(pct,2)}%;background:${color}"><span class="vbar-tooltip">${x.date} — ${x.count.toLocaleString()}</span></div><div class="vbar-label">${label}</div></div>`; }
+      html+='</div>'; dEl.innerHTML=html;
+    }
+    // Weekly
+    const wEl = document.getElementById('weekly-chart');
+    if (wEl) {
+      const dataMap={}; if (d.weekly_activity) for (const x of d.weekly_activity) dataMap[x.week]=x.count;
+      const weeks=[]; const today=new Date();
+      for (let i=11;i>=0;i--) { const dt=new Date(today); dt.setDate(dt.getDate()-i*7); const yr=dt.getFullYear(); const jan1=new Date(yr,0,1); const doy=Math.floor((dt-jan1)/86400000); const wn=Math.floor((doy+jan1.getDay())/7); const key=yr+'-W'+String(wn).padStart(2,'0'); if (!weeks.find(w=>w.week===key)) weeks.push({week:key,count:dataMap[key]||0}); }
+      const maxC=Math.max(...weeks.map(x=>x.count),1);
+      let html='<div class="vbar-container">';
+      for (const x of weeks) { const pct=(x.count/maxC)*100; const label=x.week.replace(/^\d{4}-/,''); const color=x.count>0?'var(--orange)':'rgba(255,179,71,.1)'; html+=`<div class="vbar-wrapper"><div class="vbar" style="height:${Math.max(pct,2)}%;background:${color}"><span class="vbar-tooltip">${x.week} — ${x.count.toLocaleString()}</span></div><div class="vbar-label">${label}</div></div>`; }
+      html+='</div>'; wEl.innerHTML=html;
+    }
+    // Monthly
+    const mEl = document.getElementById('monthly-chart');
+    if (mEl) {
+      const dataMap={}; if (d.monthly_activity) for (const x of d.monthly_activity) dataMap[x.month]=x.count;
+      const monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const months=[]; const today=new Date();
+      for (let i=11;i>=0;i--) { const dt=new Date(today.getFullYear(),today.getMonth()-i,1); const key=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0'); months.push({month:key,count:dataMap[key]||0}); }
+      const maxC=Math.max(...months.map(x=>x.count),1);
+      let html='<div class="vbar-container">';
+      for (const x of months) { const pct=(x.count/maxC)*100; const mIdx=parseInt(x.month.slice(5))-1; const label=monthNames[mIdx]||x.month.slice(5); const color=x.count>0?'var(--accent2)':'rgba(255,107,138,.1)'; html+=`<div class="vbar-wrapper"><div class="vbar" style="height:${Math.max(pct,2)}%;background:${color}"><span class="vbar-tooltip">${x.month} — ${x.count.toLocaleString()}</span></div><div class="vbar-label">${label}</div></div>`; }
+      html+='</div>'; mEl.innerHTML=html;
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  PLUGIN: Keyboard Heatmap
+// ═══════════════════════════════════════════════
+registerPlugin({
+  id: 'keyboard-heatmap',
+  name: 'Keyboard Heatmap',
+  _currentProfile: localStorage.getItem('kb-profile') || 'turkish-q',
+  _lastTopKeys: null,
+  render(slot) {
+    const self = pluginRegistry['keyboard-heatmap'];
+    slot.innerHTML = `<div class="chart-card">
+      <div class="section-header">
+        <div class="section-title"><span class="dot" style="background:var(--accent2)"></span> Keyboard Heatmap</div>
+        <select class="profile-select" id="kb-profile-select"></select>
+      </div>
+      <div class="keyboard-container"><div class="keyboard" id="keyboard-heatmap"></div></div>
+      <div class="legend"><span>Less</span><div class="legend-bar"></div><span>More</span></div>
+    </div>`;
+    // Build profile selector
+    const sel = document.getElementById('kb-profile-select');
+    for (const [id, prof] of Object.entries(KEYBOARD_PROFILES)) {
+      const opt = document.createElement('option');
+      opt.value = id; opt.textContent = prof.name;
+      if (id === self._currentProfile) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    self._buildKeyboard();
+  },
+  init() {
+    const self = pluginRegistry['keyboard-heatmap'];
+    const sel = document.getElementById('kb-profile-select');
+    if (sel) sel.addEventListener('change', function() {
+      self._currentProfile = this.value;
+      localStorage.setItem('kb-profile', this.value);
+      self._buildKeyboard();
+      if (self._lastTopKeys) self._applyHeatmap(self._lastTopKeys);
+    });
+  },
+  _buildKeyboard() {
+    const self = pluginRegistry['keyboard-heatmap'];
+    const profile = KEYBOARD_PROFILES[self._currentProfile] || KEYBOARD_PROFILES['turkish-q'];
+    const el = document.getElementById('keyboard-heatmap');
+    if (!el) return;
+    el.innerHTML = '';
+
+    function renderKey(key, parent, isTopRow) {
+      const keyEl = document.createElement('div');
+      keyEl.className = 'kb-key' + (isTopRow ? ' tt-below' : '') + (key.sub ? ' kb-key-sub' : '') + (key.h && key.h > 1 ? ' kb-key-tall' : '');
+      keyEl.style.width = key.w + 'px';
+      if (key.h && key.h > 1) keyEl.style.height = (44 * key.h + 5 * (key.h - 1)) + 'px';
+      keyEl.dataset.key = key.id || key.d || key.k;
+      keyEl.dataset.label = key.tooltip || key.k;
+      const labelEl = document.createElement('span');
+      labelEl.className = 'kb-label'; labelEl.textContent = key.k;
+      keyEl.appendChild(labelEl);
+      if (key.sub) {
+        const subEl = document.createElement('span');
+        subEl.className = 'kb-sub-label'; subEl.textContent = key.sub;
+        keyEl.appendChild(subEl);
+      }
+      const countEl = document.createElement('span');
+      countEl.className = 'kb-count'; countEl.textContent = '0';
+      keyEl.appendChild(countEl);
+      const tt = document.createElement('div');
+      tt.className = 'kb-tooltip';
+      tt.innerHTML = '<span class="tt-key">' + esc(keyEl.dataset.label) + '</span> &mdash; <span class="tt-count">0</span> presses';
+      keyEl.appendChild(tt);
+      parent.appendChild(keyEl);
+    }
+
+    for (let rowIdx = 0; rowIdx < profile.rows.length; rowIdx++) {
+      const row = profile.rows[rowIdx];
+      const rowEl = document.createElement('div');
+      rowEl.className = 'kb-row';
+      if (rowIdx > 0 && profile.rows[rowIdx - 1].some(key => !key.gap && key.h && key.h > 1)) rowEl.classList.add('kb-row-overlap');
+      const firstBigGap = row.findIndex(k => k.gap && k.w >= 14);
+      const mainKeys = firstBigGap >= 0 ? row.slice(0, firstBigGap) : row;
+      const rightKeys = firstBigGap >= 0 ? row.slice(firstBigGap + 1) : [];
+      for (const key of mainKeys) {
+        if (key.gap) { const sp = document.createElement('div'); sp.style.width = key.w + 'px'; sp.style.flexShrink = '0'; rowEl.appendChild(sp); continue; }
+        renderKey(key, rowEl, rowIdx === 0);
+      }
+      if (rightKeys.length > 0) { const sp = document.createElement('div'); sp.style.flex = '1'; sp.style.minWidth = '14px'; rowEl.appendChild(sp); }
+      for (const key of rightKeys) {
+        if (key.gap) { const sp = document.createElement('div'); sp.style.width = key.w + 'px'; sp.style.flexShrink = '0'; rowEl.appendChild(sp); continue; }
+        renderKey(key, rowEl, rowIdx === 0);
+      }
+      el.appendChild(rowEl);
+    }
+  },
+  _heatColor(ratio) {
+    if (ratio <= 0) return '#1e2235';
+    const h = 260 - ratio * 260, s = 55 + ratio * 35, l = 18 + ratio * 30;
+    return `hsl(${h},${s}%,${l}%)`;
+  },
+  _applyHeatmap(topKeys) {
+    const self = pluginRegistry['keyboard-heatmap'];
+    if (!topKeys || topKeys.length === 0) return;
+    const counts = {};
+    for (const k of topKeys) counts[k.key_name] = (counts[k.key_name] || 0) + k.count;
+    if (counts['LShift'] || counts['RShift']) counts['Shift'] = (counts['Shift'] || 0) + (counts['LShift'] || 0) + (counts['RShift'] || 0);
+    if (counts['LCtrl'] || counts['RCtrl']) counts['Ctrl'] = (counts['Ctrl'] || 0) + (counts['LCtrl'] || 0) + (counts['RCtrl'] || 0);
+    if (counts['LAlt'] || counts['RAlt']) counts['Alt'] = (counts['Alt'] || 0) + (counts['LAlt'] || 0) + (counts['RAlt'] || 0);
+    const maxCount = Math.max(...Object.values(counts), 1);
+    document.querySelectorAll('.kb-key').forEach(el => {
+      const name = el.dataset.key;
+      const c = counts[name] || 0;
+      const ratio = maxCount > 0 ? c / maxCount : 0;
+      el.style.background = self._heatColor(ratio);
+      el.querySelector('.kb-count').textContent = c > 0 ? c.toLocaleString() : '';
+      const tt = el.querySelector('.kb-tooltip');
+      if (tt) {
+        const label = el.dataset.label || el.querySelector('.kb-label').textContent;
+        tt.innerHTML = '<span class="tt-key">' + esc(label) + '</span> &mdash; <span class="tt-count">' + (c > 0 ? c.toLocaleString() : '0') + '</span> presses';
+      }
+    });
+  },
+  update(d) {
+    const self = pluginRegistry['keyboard-heatmap'];
+    self._lastTopKeys = d.top_keys;
+    self._applyHeatmap(d.top_keys);
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  PLUGIN: Top Keys
+// ═══════════════════════════════════════════════
+registerPlugin({
+  id: 'top-keys',
+  name: 'Top Keys',
+  render(slot) {
+    slot.innerHTML = `<div class="chart-card">
+      <div class="section-title"><span class="dot" style="background:var(--accent)"></span> Top Keys</div>
+      <div id="bars"><div class="chart-empty">Waiting for data…</div></div>
+    </div>`;
+  },
+  update(d) {
     const barsEl = document.getElementById('bars');
+    if (!barsEl) return;
     if (d.top_keys && d.top_keys.length > 0) {
       const max = d.top_keys[0].count;
       barsEl.innerHTML = d.top_keys.slice(0, 20).map(k => {
@@ -1069,18 +1117,84 @@ async function refresh() {
         return `<div class="bar-row"><div class="bar-label">${esc(k.key_name)}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="bar-count">${fmtNum(k.count)}</div></div>`;
       }).join('');
     }
+  }
+});
 
-    // Hold duration table
+// ═══════════════════════════════════════════════
+//  PLUGIN: Hold Duration
+// ═══════════════════════════════════════════════
+registerPlugin({
+  id: 'hold-duration',
+  name: 'Hold Duration',
+  _view: 'table',
+  render(slot) {
+    slot.innerHTML = `<div class="chart-card">
+      <div class="section-header">
+        <div class="section-title"><span class="dot" style="background:var(--orange)"></span> Hold Duration Analysis</div>
+        <div class="toggle-group">
+          <button class="view-toggle active" id="hold-tbl-btn" title="Table view">&#9776;</button>
+          <button class="view-toggle" id="hold-hist-btn" title="Histogram view">&#9635;</button>
+        </div>
+      </div>
+      <div id="hold-table" style="max-height:400px;overflow-y:auto"><div class="chart-empty">No hold data yet.</div></div>
+      <div id="hold-histogram" class="hold-histogram" style="max-height:400px;overflow-y:auto;display:none"><div class="chart-empty">No hold data yet.</div></div>
+    </div>`;
+  },
+  init() {
+    const self = pluginRegistry['hold-duration'];
+    function setView(mode) {
+      self._view = mode;
+      const tbl = document.getElementById('hold-table');
+      const hist = document.getElementById('hold-histogram');
+      if (tbl) tbl.style.display = mode === 'table' ? '' : 'none';
+      if (hist) hist.style.display = mode === 'histogram' ? '' : 'none';
+      const tb = document.getElementById('hold-tbl-btn');
+      const hb = document.getElementById('hold-hist-btn');
+      if (tb) tb.classList.toggle('active', mode === 'table');
+      if (hb) hb.classList.toggle('active', mode === 'histogram');
+    }
+    const tb = document.getElementById('hold-tbl-btn');
+    const hb = document.getElementById('hold-hist-btn');
+    if (tb) tb.addEventListener('click', () => setView('table'));
+    if (hb) hb.addEventListener('click', () => setView('histogram'));
+  },
+  update(d) {
     const holdEl = document.getElementById('hold-table');
-    if (d.held_keys && d.held_keys.length > 0) {
+    if (holdEl && d.held_keys && d.held_keys.length > 0) {
       holdEl.innerHTML = `<table class="hold-table"><thead><tr><th>Key</th><th>Avg Hold</th><th>Max Hold</th><th>Presses</th></tr></thead><tbody>${d.held_keys.map(h =>
         `<tr><td class="key-col">${esc(h.key_name)}</td><td class="ms-col">${Math.round(h.avg_hold_ms)} ms</td><td class="ms-col">${fmtNum(h.max_hold_ms)} ms</td><td>${fmtNum(h.total_holds)}</td></tr>`
       ).join('')}</tbody></table>`;
-      renderHoldHistogram(d.held_keys);
     }
+    const histEl = document.getElementById('hold-histogram');
+    if (histEl && d.held_keys && d.held_keys.length > 0) {
+      const absMax = Math.max(...d.held_keys.map(x => x.max_hold_ms), 1);
+      let html = '';
+      for (const h of d.held_keys) {
+        const avgPct = Math.max((h.avg_hold_ms / absMax) * 100, 1);
+        const maxPct = Math.max((h.max_hold_ms / absMax) * 100, 1);
+        html += `<div class="hbar-row"><div class="hbar-label">${esc(h.key_name)}</div><div class="hbar-track"><div class="hbar-fill hbar-fill-max" style="width:${maxPct}%"></div><div class="hbar-fill hbar-fill-avg" style="width:${avgPct}%"></div></div><div class="hbar-value">${Math.round(h.avg_hold_ms)} ms</div></div>`;
+      }
+      html += `<div class="hold-legend"><span><span class="hold-legend-swatch" style="background:var(--orange)"></span>Avg hold</span><span><span class="hold-legend-swatch" style="background:var(--accent2);opacity:.45"></span>Max hold</span></div>`;
+      histEl.innerHTML = html;
+    }
+  }
+});
 
-    // Recent feed
+// ═══════════════════════════════════════════════
+//  PLUGIN: Recent Activity
+// ═══════════════════════════════════════════════
+registerPlugin({
+  id: 'recent-activity',
+  name: 'Recent Activity',
+  render(slot) {
+    slot.innerHTML = `<div class="chart-card">
+      <div class="section-title"><span class="dot" style="background:var(--green)"></span> Recent Activity (Last 50 Keys)</div>
+      <div id="recent"><div class="chart-empty">Waiting for data…</div></div>
+    </div>`;
+  },
+  update(d) {
     const recentEl = document.getElementById('recent');
+    if (!recentEl) return;
     if (d.recent && d.recent.length > 0) {
       recentEl.innerHTML = '<div class="recent-feed">' + d.recent.map(r => {
         const time = r.timestamp ? (r.timestamp.split('T')[1] || r.timestamp) : '';
@@ -1088,22 +1202,26 @@ async function refresh() {
         return `<span class="recent-key">${esc(r.key_name)}${esc(hold)}<span class="ts">${esc(time)}</span></span>`;
       }).join('') + '</div>';
     }
+  }
+});
 
-    // Charts
-    renderWpmTimeline(d.wpm_timeline);
-    renderHourlyChart(d.hourly_activity);
-    renderDailyChart(d.daily_activity);
-    renderWeeklyChart(d.weekly_activity);
-    renderMonthlyChart(d.monthly_activity);
-    updateKeyboard(d.top_keys);
-    updatePeriodStats(d.period_stats);
+// ═══════════════════════════════════════════════
+//  Bootstrap
+// ═══════════════════════════════════════════════
+currentConfig = loadConfig();
+renderPlugins();
 
+async function refresh() {
+  try {
+    const res = await fetch('/api/stats?token=' + encodeURIComponent(_statsToken));
+    const d = await res.json();
+    window._lastStatsData = d;
+    updateAllPlugins(d);
   } catch(e) {
     console.error('Failed to fetch stats:', e);
   }
 }
 
-// Wait for initial tokens before first data fetch.
 refreshTokens().then(() => {
   refresh();
   setInterval(refresh, 3000);

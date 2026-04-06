@@ -7,14 +7,10 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WM_MBUTTONDOWN, WM_RBUTTONDOWN, WM_SYSKEYDOWN, WM_SYSKEYUP,
 };
 
-use crate::events::{InputEvent, MouseButton};
 use super::emit;
+use crate::events::{InputEvent, MouseButton};
 
-pub unsafe extern "system" fn keyboard_hook(
-    code: i32,
-    wparam: WPARAM,
-    lparam: LPARAM,
-) -> LRESULT {
+pub unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     if code >= 0 {
         let msg = wparam.0 as u32;
         if msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN {
@@ -42,11 +38,7 @@ pub unsafe extern "system" fn keyboard_hook(
     CallNextHookEx(None, code, wparam, lparam)
 }
 
-pub unsafe extern "system" fn mouse_hook(
-    code: i32,
-    wparam: WPARAM,
-    lparam: LPARAM,
-) -> LRESULT {
+pub unsafe extern "system" fn mouse_hook(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     if code >= 0 {
         let info = &*(lparam.0 as *const MSLLHOOKSTRUCT);
         let msg = wparam.0 as u32;

@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 #[derive(Debug, Clone)]
 pub enum MouseButton {
     Left,
@@ -22,4 +24,11 @@ pub enum InputEvent {
         x: i32,
         y: i32,
     },
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct TouchpadContact {
+    pub id: u32,
+    pub x: i32,
+    pub y: i32,
 }
